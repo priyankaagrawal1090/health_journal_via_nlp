@@ -37,6 +37,31 @@
   }
 }
 
+/* Home */
+.home {
+  display: flex;
+  flex-direction: column;
+  height: 100vw;
+  background-color: #333;
+}
+
+.home-navbar{
+  display: flex;
+  padding: 10px;
+  flex: 0.005;
+  width: 100%;
+  z-index: 1000; /* Ensure the navbar appears on top of other content */
+  position: fixed;
+  z-index: 1000; /* Ensure the navbar appears on top of other content */
+}
+
+.home-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between; /* Vertically space out the content */
+  padding: 10px;
+}
 
 /* Navbar */
 .navbar {
@@ -44,8 +69,49 @@
   color: #fff; /* Text color */
 }
 
+.navbar-nav {
+  display: flex;
+  justify-content: flex-end;
+  overflow: hidden; /* Hide overflow outside the container */
+  flex: 1;
+  align-items: center;
+}
+
+.nav-items {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  font-size: 2vw;
+  color:white;
+  text-decoration: none;
+}
+
 .vertical-navbar-ul {
   list-style: none;
+}
+
+/* Horizontal Navbar */
+.horizontal-navbar {
+  padding: 10px;
+  display: flex;
+  background-color: #000;
+  color: white;
+  align-self: flex-end;
+  width: 100%;
+  border-radius: 10px;
+  /* flex-direction: column; */
+}
+
+.navbar-logo{
+  display: flex;
+  justify-content: flex-start;
+  overflow: hidden; /* Hide overflow outside the container */
+  flex: 0.25;
+}
+
+.img-logo {
+  padding: 20px;
+  font-size: 2vw;
 }
 
 /* Patient UI */

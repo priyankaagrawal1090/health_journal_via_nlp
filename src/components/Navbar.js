@@ -1,19 +1,22 @@
 import React, { Component } from 'react';
 // import { Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Link, Routes } from 'react-router-dom';
 import '../App.css'
+import logo from '../health-journal-high-resolution-logo-white.png';
 
 export function HorizontalNavbar() {
   return (
-    <nav className="horizontal-navbar">
-      <li>
-        {/* <Link to="/home" activeClassName='active'>Home</Link> */}
-        Home
-      </li>
-      <li>
-        {/* <Link to="/home" activeClassName='active'>Home</Link> */}
-        About
-      </li>
-    </nav>
+    <div className="horizontal-navbar">
+      <div className="navbar-logo">
+        {/* <img className="img-logo" src={logo}></img> */}
+        <p className="img-logo">Health Journal</p>
+      </div>
+      <div className="navbar-nav">
+        <Link to="/home" className="nav-items">Home</Link>
+        <Link to="/about" className="nav-items">About</Link>
+        <Link to="/signin" className="nav-items">Sign in</Link>
+      </div>
+    </div>
   )
 }
 
@@ -31,18 +34,6 @@ export function Sidebar() {
         <div className="sidebar-logout"><i className="fa fa-sign-out"/></div>
       </div>
     </div>
-    // <nav className="Vertical-navbar">
-    //   <ul className="vertical-navbar-ul">
-    //     <li>
-    //       {/* <Link to="/home" activeClassName='active'>Home</Link> */}
-    //       Home
-    //     </li>
-    //     <li>
-    //       {/* <Link to="/home" activeClassName='active'>Home</Link> */}
-    //       About
-    //     </li>
-    //   </ul>
-    // </nav>
   )
 }
 
