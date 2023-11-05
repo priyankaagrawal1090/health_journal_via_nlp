@@ -36,3 +36,247 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* Navbar */
+.navbar {
+  background-color: #333; /* Dark background color */
+  color: #fff; /* Text color */
+}
+
+.vertical-navbar-ul {
+  list-style: none;
+}
+
+/* Patient UI */
+.div-patientUI {
+  display: flex;
+  height: 100vh; /* 100% of the viewport height */
+}
+
+/* Left-aligned vertical navbar */
+.div-sidebar {
+  display: flex;
+  flex: 0.25; /* Takes up 5% of the available width */
+  background-color: #000; /* Dark black */
+  color: #fff; /* White text */
+  padding: 20px;
+}
+
+/* Right-aligned container */
+.div-chatbox {
+  flex: 4; /* Takes up the remaining 80% of the available width */
+  background-color: #333; /* Two shades lighter than black */
+  color: #fff; /* White text */
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  /* justify-self: flex-end; Bottom-align the content */
+}
+
+
+/* Chatbox */
+
+/* Chat Container */
+.chat-container {
+  display: flex;
+  flex-direction: column-reverse; /* Messages grow upward */
+  width: 100%;
+  margin: 0 auto;
+  /* border: 1px solid #ccc; */
+  /* height: 100%; */
+  flex-grow: 1; /* Expand to fill available space */
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #333; /* Two shades lighter than black */
+}
+
+/* Chat Messages */
+.chat-messages {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%; /* Add a max height for scrolling */
+  overflow-y: auto; /* Enable vertical scrolling */
+  background-color: #333; /* Two shades lighter than black */
+}
+
+/* Message Bubbles */
+.message {
+  max-width: 70%;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  word-wrap: break-word;
+  clear: both;
+}
+
+/* User Message */
+.user {
+  background-color: #333;
+  color: #333;
+  align-self: flex-end;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-direction: row-reverse;
+  text-align: center;
+  padding: 10px;
+}
+
+/* Bot Message */
+.bot {
+  background-color: #333;
+  color: white;
+  align-self: flex-start;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  padding: 10px;
+}
+
+/* User and Bot Name Bubbles */
+.name-bubble {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%; /* Make it a circle */
+  width: 60px; /* Adjust width as needed */
+  height: 60px; /* Adjust height as needed */
+  background-color: #007bff; /* User and bot name bubble color */
+  color: white;
+  margin: 10px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Message Text */
+.message-text {
+  background-color: #f7f7f7;
+  padding: 10px;
+  border-radius: 5px 5px 5px 5px;
+}
+
+/* Chat Input */
+.chat-input {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #333; /* Two shades lighter than black */
+}
+
+input[type="text"] {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px;
+  margin-right: 10px;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+
+.user-bubble {
+    display: flex;
+    align-self: flex-end;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    background-color: #333;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+/* Bot Bubble */
+.bot-bubble {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    background-color: #333;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+/* Message Bubbles */
+.message {
+    display: flex;
+    margin: 10px;
+    padding: 50px;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+/* Message Text */
+.message-text {
+    background-color: white;
+    color: #333;
+}
+
+.message.bot .message-text {
+    background-color: #f7f7f7;
+    color: #333;
+}
+
+
+/* Sidebar style */
+.sidebar {
+  display: flex;
+  padding: 10px;
+  flex-direction: column;
+  position: relative;
+  flex-grow: 1;
+}
+
+.sidebar-profile {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  flex: 40%;
+  padding: 10px;
+}
+
+/* Profile Picture and Info Styling */
+.profile-picture, .profile-info {
+  margin: 20px;
+  font-size: 40px;
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+  padding: 10px;
+  flex: 60%; /* Takes up 60% of the sidebar height */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+/* Navigation Items Styling */
+.sidebar-home, .sidebar-settings, .sidebar-logout {
+  margin: 10px;
+  font-size: 40px;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* Font Awesome Icons (Assuming you're using Font Awesome) */
+.fa {
+  font-size: 24px;
+}
