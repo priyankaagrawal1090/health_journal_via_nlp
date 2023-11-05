@@ -1,5 +1,6 @@
 .App {
   text-align: center;
+  background-color: #363c47;
 }
 
 .App-logo {
@@ -36,6 +37,43 @@
     transform: rotate(360deg);
   }
 }
+
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.3);
+  margin: 30px;
+  border-radius: 30px;
+  color: white;
+  flex-direction: column;
+}
+
+.content-header{
+  color: white;
+  text-transform: capitalize;
+}
+
+.content-body {
+  color: white
+}
+
+.nav-item {
+  padding: 10px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Home */
 .home {
