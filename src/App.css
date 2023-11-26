@@ -61,6 +61,7 @@
 
 .nav-item {
   padding: 10px;
+  cursor: pointer;
 }
 
 
@@ -101,7 +102,8 @@
   padding: 10px;
 }
 
-/* Navbar */
+/* 
+bar */
 .navbar {
   background-color: #333; /* Dark background color */
   color: #fff; /* Text color */
