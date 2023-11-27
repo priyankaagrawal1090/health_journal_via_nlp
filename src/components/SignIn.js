@@ -1,42 +1,38 @@
-import React, { useState } from 'react';
-import '../App.css';
-import Form from 'react-bootstrap/Form';
+import React, { useState } from "react";
+import "../App.css";
 
-export default function SingIn() {
-    const [inputValue, setInputValue] = useState('');
-    const [savedValue, setSavedValue] = useState(localStorage.getItem('savedValue') || '');
-      
-    const handleInputChange = (e) => {
-        setInputValue(e.target.value);
-    };
-      
-    const handleSaveToLocalStorage = () => {
-        localStorage.setItem('savedValue', inputValue);
-        setSavedValue(inputValue);
-    };
+export default function SignIn() {
+  const [User, setUser] = useState("");
+  const [Password, setPassword] = useState("");
 
-    return (
-        <div className="container mt-4">
-            <div className="form-group">
-                <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter text..."
-                    value={inputValue}
-                    onChange={handleInputChange}
-                />
-            </div>
-            <div className="form-group">
-                <button className="btn btn-primary" onClick={handleSaveToLocalStorage}>
-                    Save to Local Storage
-                </button>
-            </div>
-            <div className="form-group">
-                <p>Saved Value in Local Storage: {savedValue}</p>
-            </div>
-            <h1>Sign In from Component</h1>
-        </div>
-        
-        
-    )
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  };
+
+  return (
+    <div className="container">
+      <div className="auth-form">
+        <h2>Sign in to Health Journal</h2>
+        <form onSubmit={handleSubmit}>
+          <label for="user">
+            Username:
+            <input
+              value={User}
+              onChange={(e) => setUser(e.target.value)}
+              type="text"
+            ></input>
+          </label>
+          <label for="password">
+            Password:
+            <input
+              value={Password}
+              onChange={(e) => setPassword(e.target.value)}
+              type="password"
+            ></input>
+          </label>
+        </form>
+        <button onClick={handleSubmit}>Sign In</button>
+      </div>
+    </div>
+  );
 }

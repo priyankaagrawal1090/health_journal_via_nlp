@@ -1,13 +1,12 @@
-import Home from "./components/Home";
-import About from "./components/About";
-import SignIn from "./components/SignIn";
-import AuthForm from "./components/AuthForm";
-import "font-awesome/css/font-awesome.min.css";
-import { Link } from "react-scroll";
-import { Navbar, Nav, Container } from "react-bootstrap";
-import "bootstrap/dist/css/bootstrap.css";
-import PatientUI from "./components/PatientUI";
-import Login from "./components/Login";
+import Home from './components/Home';
+import About from './components/About';
+import SignIn from './components/SignIn';
+import AuthForm from './components/AuthForm';
+import 'font-awesome/css/font-awesome.min.css';
+import { Link } from 'react-scroll';
+import { Navbar, Nav, Container } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.css';
+import PatientUI from './components/PatientUI'
 
 export const HOME_CONTENT_ITEMS = [
   {
@@ -47,21 +46,22 @@ function App() {
                   duration={500}
                   delay={0}
                 >
-                  <Nav.Item as="div" className="nav-item">
-                    {menu.title}
-                  </Nav.Item>
+                  <Nav.Item as="div" className="nav-item">{menu.title}</Nav.Item>
                 </Link>
               ))}
             </Nav>
           </Container>
         </Navbar>
       </header>
-      <div style={{ paddingTop: "50px" }}>
-        <div className="content overlay">
-          <Login />
-        </div>
+      <div style={{ paddingTop: '50px' }}>
+        {HOME_CONTENT_ITEMS.map((menu) => (
+          <div className="content overlay" id={menu.title}>
+            {<menu.component/>}
+          </div>
+        ))}
       </div>
     </div>
+
   );
 }
 
