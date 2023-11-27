@@ -31,6 +31,8 @@ export default function SignIn({ onUpdateIsRegistered }) {
   const [formState, setFormState] = useState(initialFormState);
   // Create a state variable to manage error messages
   const [errors, setErrors] = useState({});
+  //
+  const [authErrors, setAuthErrors] = useState({});
 
   const [signInSuccess, setSignInSuccess] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -60,6 +62,28 @@ export default function SignIn({ onUpdateIsRegistered }) {
     return ""; // No error
   };
 
+  const passwordAuth = (Username, fieldName, value) => {
+    // Retreive data from local storage
+    const storedFormData = localStorage.getItem(Username);
+    console.log("Username = ", Username);
+    console.log("fieldName = ", fieldName);
+    // Check if the Username is valid
+    if (storedFormData) {
+      const parsedData = JSON.parse(storedFormData);
+      console.log("Username is valid. Retrieved data:", parsedData);
+      if (parsedData[fieldName] === value) {
+        console.log("Field verified.");
+      } else {
+        return `${fieldName} invalid!!`;
+      }
+    } else {
+      console.log("Username is invalid");
+      return `${fieldName} is invalid`;
+    }
+
+    return "";
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -69,20 +93,28 @@ export default function SignIn({ onUpdateIsRegistered }) {
       newErrors[field.name] = validateField(field.name, formState[field.name]);
     });
 
+    // Authenticate Username and Password
+    const newAuthErrors = {};
+    SIGNIN_FORM_FIELDS.forEach((field) => {
+      newAuthErrors[field.name] = passwordAuth(
+        formState["Username"],
+        field.name,
+        formState[field.name]
+      );
+    });
+
     // Update errors state with the latest validation results
     setErrors(newErrors);
+    setAuthErrors(newAuthErrors);
+    console.log("Errors:", newAuthErrors);
 
     // Check if there are no errors (i.e., form is valid)
-    if (Object.values(newErrors).every((error) => !error)) {
-      // Perform form submission logic
-      // Store form data in local storage
-      //   localStorage.setItem("formData", JSON.stringify(formState));
-      console.log("Form submitted with state:", formState);
-
-      // Set signUpSuccess to true
+    if (
+      Object.values(newErrors).every((error) => !error) &&
+      Object.values(newAuthErrors).every((error) => !error)
+    ) {
       setSignInSuccess(true);
       setShowSuccessMessage(true);
-
       // Hide the success message after 5 seconds
       setTimeout(() => {
         setShowSuccessMessage(false);
@@ -107,6 +139,9 @@ export default function SignIn({ onUpdateIsRegistered }) {
       {errors[field.name] && (
         <p style={{ color: "red" }}>{errors[field.name]}</p>
       )}
+      {authErrors[field.name] && (
+        <p style={{ color: "red" }}>{authErrors[field.name]}</p>
+      )}
     </label>
   ));
 
@@ -119,7 +154,7 @@ export default function SignIn({ onUpdateIsRegistered }) {
         console.log("Signing In...");
         const targetRoute = "/patient-ui";
         navigate(targetRoute);
-      }, 1000); // 5000 milliseconds (adjust as needed)
+      }, 1000); // 1000 milliseconds (adjust as needed)
       // Clear the timer if the component is unmounted
       return () => clearTimeout(redirectTimer);
     }

@@ -154,7 +154,7 @@ export default function SignUp({ onUpdateIsRegistered }) {
     if (Object.values(newErrors).every((error) => !error)) {
       // Perform form submission logic
       // Store form data in local storage
-      localStorage.setItem("formData", JSON.stringify(formState));
+      localStorage.setItem(formState.Username, JSON.stringify(formState));
       console.log("Form submitted with state:", formState);
 
       // Set signUpSuccess to true
@@ -164,7 +164,7 @@ export default function SignUp({ onUpdateIsRegistered }) {
       // Hide the success message after 5 seconds
       setTimeout(() => {
         setShowSuccessMessage(false);
-      }, 5000); // 5000 milliseconds (adjust as needed)
+      }, 2000); // 2000 milliseconds (adjust as needed)
     } else {
       // There are validation errors, handle them accordingly
       console.log("Form has validation errors.");
