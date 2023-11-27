@@ -174,9 +174,10 @@ export default function SignUp({ onUpdateIsRegistered }) {
   };
 
   const formFields = SIGNUP_FORM_FIELDS.map((field) => (
-    <label for={field.name}>
-      {field.title}:
+    <div className="form-container">
+      <label for={field.name}>{field.title}:</label>
       <input
+        className=""
         value={formState[field.name]}
         onChange={(e) => updateField(field.name, e.target.value)}
         type={field.type}
@@ -185,7 +186,7 @@ export default function SignUp({ onUpdateIsRegistered }) {
       {errors[field.name] && (
         <p style={{ color: "red" }}>{errors[field.name]}</p>
       )}
-    </label>
+    </div>
   ));
 
   // Use useEffect to navigate to SignIn component after signUpSuccess is set to true
@@ -196,7 +197,7 @@ export default function SignUp({ onUpdateIsRegistered }) {
         // Navigate to the SignIn component or route as needed
         console.log("Redirecting to SignIn page...");
         onUpdateIsRegistered(true);
-      }, 5000); // 5000 milliseconds (adjust as needed)
+      }, 2000); // 2000 milliseconds (adjust as needed)
 
       // Clear the timer if the component is unmounted
       return () => clearTimeout(redirectTimer);
@@ -222,8 +223,13 @@ export default function SignUp({ onUpdateIsRegistered }) {
           <form onSubmit={handleSubmit}>
             {formFields}
             <button onClick={handleSubmit}>Sign Up</button>
-            <p>Already have an account?</p>
-            <button onClick={handleFormSwitchSignIn}>Sign In here</button>
+            <hr></hr>
+            <div className="form-switch">
+              Already have an account?
+              <button className="link-button" onClick={handleFormSwitchSignIn}>
+                Sign In here
+              </button>
+            </div>
           </form>
         )}
       </div>

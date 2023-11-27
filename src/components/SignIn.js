@@ -128,9 +128,10 @@ export default function SignIn({ onUpdateIsRegistered }) {
   };
 
   const formFields = SIGNIN_FORM_FIELDS.map((field) => (
-    <label for={field.name}>
-      {field.title}:
+    <div className="form-container">
+      <label for={field.name}>{field.title}:</label>
       <input
+        className="form-field"
         value={formState[field.name]}
         onChange={(e) => updateField(field.name, e.target.value)}
         type={field.type}
@@ -142,7 +143,7 @@ export default function SignIn({ onUpdateIsRegistered }) {
       {authErrors[field.name] && (
         <p style={{ color: "red" }}>{authErrors[field.name]}</p>
       )}
-    </label>
+    </div>
   ));
 
   // Use useEffect to navigate to PatientUI/DoctorUI component after signInSuccess is set to true
@@ -177,8 +178,13 @@ export default function SignIn({ onUpdateIsRegistered }) {
           <form onSubmit={handleSubmit}>
             {formFields}
             <button onClick={handleSubmit}>Sign In</button>
-            <p>Don't have an account?</p>
-            <button onClick={handleFormSwitchSignUp}>Sign Up here</button>
+            <hr></hr>
+            <div className="form-switch">
+              Don't have an account?
+              <button className="link-button" onClick={handleFormSwitchSignUp}>
+                Sign Up here
+              </button>
+            </div>
           </form>
         )}
       </div>

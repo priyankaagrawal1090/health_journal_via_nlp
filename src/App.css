@@ -64,12 +64,46 @@
   cursor: pointer;
 }
 
+.form-container {
+  display: flex;
+  flex-direction: row;
+  padding: 20px;
+  font-size:x-large;
+}
 
 
+.auth-form {
+  display: flex;
+  flex-direction: column; /* Display form fields in a column */
+  align-items: center; /* Center form fields horizontally */
+  width: 100%;
+  background-color: #ccc;
+  color:#000;
+  padding: 10px;
+}
 
+label {
+  padding: 10px;
+}
 
+input {
+  padding: 10px;
+  border-radius: 10px;  
+}
 
+.link-button {
+  background: none;
+  border: none;
+  color: #007bff; /* Set the color you want for links */
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0; /* Adjust padding as needed */
+  font-size: inherit; /* Inherit font size from parent */
+}
 
+.link-button:hover {
+  color: #0056b3; /* Change color on hover if desired */
+}
 
 
 
