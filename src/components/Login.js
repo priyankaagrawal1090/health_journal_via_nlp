@@ -19,24 +19,10 @@ export default function Login() {
   };
 
   const authForm = isRegistered ? (
-    <SignIn />
+    <SignIn onUpdateIsRegistered={updateIsRegistered} />
   ) : (
     <SignUp onUpdateIsRegistered={updateIsRegistered} />
   );
-  const formSwitch = isRegistered
-    ? [
-        <p>Don't have an account?</p>,
-        <button onClick={handleFormSwitchSignUp}>Sign Up here</button>,
-      ]
-    : [
-        // <p>Already have an account?</p>,
-        // <button onClick={handleFormSwitchSignIn}>Sign In here</button>,
-      ];
 
-  return (
-    <div className="">
-      {authForm}
-      {formSwitch}
-    </div>
-  );
+  return <div className="">{authForm}</div>;
 }

@@ -3,11 +3,12 @@ import About from "./components/About";
 import SignIn from "./components/SignIn";
 import AuthForm from "./components/AuthForm";
 import "font-awesome/css/font-awesome.min.css";
-import { Link } from "react-scroll";
+import { Link as ScrollLink } from "react-scroll";
 import { Navbar, Nav, Container } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.css";
 import PatientUI from "./components/PatientUI";
 import Login from "./components/Login";
+import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 
 export const HOME_CONTENT_ITEMS = [
   {
@@ -32,37 +33,51 @@ export const HOME_CONTENT_ITEMS = [
 
 function App() {
   return (
-    <div className="App">
-      <header>
-        <Navbar bg="dark" variant="dark" className="fixed-top">
-          <Container>
-            <Navbar.Brand href="#">Health Journal</Navbar.Brand>
-            <Nav className="ml-auto">
-              {/* Use Link for smooth scrolling */}
-              {HOME_CONTENT_ITEMS.map((menu) => (
-                <Link
-                  to={menu.title}
-                  smooth={true}
-                  offset={-200}
-                  duration={500}
-                  delay={0}
-                >
-                  <Nav.Item as="div" className="nav-item">
-                    {menu.title}
-                  </Nav.Item>
-                </Link>
-              ))}
-            </Nav>
-          </Container>
-        </Navbar>
-      </header>
-      <div style={{ paddingTop: "50px" }}>
-        <div className="content overlay">
-          <Login />
+    <Router>
+      <div className="App">
+        <header>
+          <Navbar bg="dark" variant="dark" className="fixed-top">
+            <Container>
+              <Navbar.Brand href="#">Health Journal</Navbar.Brand>
+              <Nav className="ml-auto">
+                {/* Use Link for smooth scrolling */}
+                {HOME_CONTENT_ITEMS.map((menu) => (
+                  <ScrollLink
+                    to={menu.title}
+                    smooth={true}
+                    offset={-200}
+                    duration={500}
+                    delay={0}
+                  >
+                    <Nav.Item as="div" className="nav-item">
+                      {menu.title}
+                    </Nav.Item>
+                  </ScrollLink>
+                ))}
+              </Nav>
+            </Container>
+          </Navbar>
+        </header>
+        <div style={{ paddingTop: "50px" }}>
+          <div className="content overlay">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/patient-ui" element={<PatientUI />} />
+              <Route path="/" element={<Login />} />
+            </Routes>
+          </div>
         </div>
       </div>
-    </div>
+    </Router>
   );
 }
+
+// function App() {
+//   return (
+//     <>
+//       <PatientUI />
+//     </>
+//   );
+// }
 
 export default App;

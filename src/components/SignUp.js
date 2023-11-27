@@ -210,7 +210,7 @@ export default function SignUp({ onUpdateIsRegistered }) {
   return (
     <div className="container">
       <div className="auth-form">
-        <h2>Sign up to Health Journal</h2>
+        <h2>Sign up</h2>
         {showSuccessMessage && (
           <div className="success-popup">
             <p>
