@@ -4,6 +4,7 @@ import "font-awesome/css/font-awesome.min.css";
 import "bootstrap/dist/css/bootstrap.css";
 import PatientUI from "./components/PatientUI";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import DoctorUI from "./components/DoctorUI";
 
 function App() {
   return (

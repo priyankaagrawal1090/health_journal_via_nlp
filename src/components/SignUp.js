@@ -1,5 +1,23 @@
 import React, { useState, useEffect } from "react";
+import { initializeApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, doc, setDoc, collection } from "firebase/firestore/lite"
 import "../App.css";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDvXnjcl4fyhzIXxhN-NSJFom3DLonoih0",
+  authDomain: "mental-health-journal-2605e.firebaseapp.com",
+  projectId: "mental-health-journal-2605e",
+  storageBucket: "mental-health-journal-2605e.appspot.com",
+  messagingSenderId: "725820602981",
+  appId: "1:725820602981:web:b16539f99e4678bc51248c",
+  measurementId: "G-7V9YPQPLEP"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const firestore = getFirestore();
 
 const SIGNUP_FORM_FIELDS = [
   {
@@ -154,8 +172,25 @@ export default function SignUp({ onUpdateIsRegistered }) {
     if (Object.values(newErrors).every((error) => !error)) {
       // Perform form submission logic
       // Store form data in local storage
-      localStorage.setItem(formState.Username, JSON.stringify(formState));
-      console.log("Form submitted with state:", formState);
+      //localStorage.setItem(formState.Username, JSON.stringify(formState));
+      //console.log("Form submitted with state:", formState);
+      createUserWithEmailAndPassword(auth, formState['Username'], formState['Password']).then((userCredential) => {
+        const user = userCredential.user;
+        const usersRef = doc(firestore, 'Users', user.uid);
+        const userData = {
+          uid: user.uid,
+          email: formState['Username'],
+          firstName: formState['FirstName'],
+          lastName: formState['LastName'],
+        };
+        setDoc(usersRef, userData);
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log("Error Code: " + errorCode);
+        console.log("Error Message: " + errorMessage);
+      });
 
       // Set signUpSuccess to true
       setSignUpSuccess(true);
