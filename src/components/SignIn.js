@@ -129,9 +129,10 @@ export default function SignIn({ onUpdateIsRegistered }) {
 
   const formFields = SIGNIN_FORM_FIELDS.map((field) => (
     <div className="form-container">
-      <label for={field.name}>{field.title}:</label>
+      <label htmlFor={field.name}>{field.title}:</label>
       <input
         className="form-field"
+        id={field.name}
         value={formState[field.name]}
         onChange={(e) => updateField(field.name, e.target.value)}
         type={field.type}
@@ -169,6 +170,7 @@ export default function SignIn({ onUpdateIsRegistered }) {
     <div className="container">
       <div className="auth-form">
         <h2>Sign in</h2>
+        <hr />
         {showSuccessMessage && (
           <div className="success-popup">
             <p>Signing in...</p>
@@ -177,10 +179,15 @@ export default function SignIn({ onUpdateIsRegistered }) {
         {!signInSuccess && (
           <form onSubmit={handleSubmit}>
             {formFields}
-            <button onClick={handleSubmit}>Sign In</button>
+            <button
+              className="btn btn-primary sign-in-btn"
+              onClick={handleSubmit}
+            >
+              Sign In
+            </button>
             <hr></hr>
-            <div className="form-switch">
-              Don't have an account?
+            <div className="form-switch" style={{ fontSize: 20 }}>
+              Don't have an account?{" "}
               <button className="link-button" onClick={handleFormSwitchSignUp}>
                 Sign Up here
               </button>

@@ -222,10 +222,15 @@ export default function SignUp({ onUpdateIsRegistered }) {
         {!signUpSuccess && (
           <form onSubmit={handleSubmit}>
             {formFields}
-            <button onClick={handleSubmit}>Sign Up</button>
+            <button
+              className="btn btn-primary sign-in-btn"
+              onClick={handleSubmit}
+            >
+              Sign Up
+            </button>
             <hr></hr>
-            <div className="form-switch">
-              Already have an account?
+            <div className="form-switch" style={{ fontSize: 20 }}>
+              Already have an account?{" "}
               <button className="link-button" onClick={handleFormSwitchSignIn}>
                 Sign In here
               </button>

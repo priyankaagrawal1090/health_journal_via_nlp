@@ -25,7 +25,12 @@ export const HOME_CONTENT_ITEMS = [
 export default function Home() {
   return (
     <div style={{ paddingTop: "50px" }}>
-      <Navbar bg="dark" variant="dark" className="fixed-top">
+      <Navbar
+        bg="dark"
+        variant="dark"
+        className="fixed-top rounded"
+        style={{ padding: "20px" }}
+      >
         <Container>
           <Navbar.Brand href="#">
             <ScrollLink to="0" className="navbar-brand">
@@ -50,7 +55,7 @@ export default function Home() {
           </Nav>
         </Container>
       </Navbar>
-      <div id="0" className="content overlay">
+      <div id="0" className="content overlay mt-5">
         <Login />
       </div>
       <div id="1" className="content overlay">
