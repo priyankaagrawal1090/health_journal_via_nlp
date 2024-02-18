@@ -36,18 +36,48 @@ const SIGNUP_FORM_FIELDS = [
   },
   {
     id: 2,
+    name: "Gender",
+    title: "Gender",
+    type: "radio",
+    options: [
+      { label: "Male", value: "male" },
+      { label: "Female", value: "female" },
+      { label: "Other", value: "other" }
+    ],
+    required: true,
+  },
+  {
+    id: 3,
+    name: "PhoneNumber",
+    title: "Phone Number",
+    type: "tel",
+    required: true,
+  },
+  {
+    id: 4,
     name: "Username",
     title: "Username",
     type: "text",
     required: true,
   },
   {
-    id: 3,
+    id: 5,
     name: "Password",
     title: "Password",
     type: "password",
     required: true,
   },
+  {
+    id: 6,
+    name: "UserType",
+    title: "User Type",
+    type: "radio",
+    options: [
+      { label: "Patient", value: "patient" },
+      { label: "Doctor", value: "doctor" }
+    ],
+    required: true,
+  }
 ];
 
 const PASSWORD_MIN_LENGTH = 8;
@@ -182,6 +212,7 @@ export default function SignUp({ onUpdateIsRegistered }) {
           email: formState['Username'],
           firstName: formState['FirstName'],
           lastName: formState['LastName'],
+          userType: formState['UserType'],
         };
         setDoc(usersRef, userData);
       })
@@ -210,7 +241,25 @@ export default function SignUp({ onUpdateIsRegistered }) {
 
   const formFields = SIGNUP_FORM_FIELDS.map((field) => (
     <div className="form-container">
-      <label for={field.name}>{field.title}:</label>
+      <label  className="col-4 card-text" for={field.name}>{field.title}:</label>
+      {field.type==="radio" ? (
+        <div>
+        {field.options.map((option) => (
+          <div key={option.value}>
+            <input 
+              id={option.value}
+              name={field.name}
+              type="radio"
+              value={option.value}
+              checked={formState[field.name] === option.value}
+              onChange={(e) => updateField(field.name, e.target.value)}
+              required={field.required}
+            />
+            <label htmlFor={option.value}>{option.label}</label>
+          </div>
+        ))}
+      </div>
+      ) : (
       <input
         className=""
         value={formState[field.name]}
@@ -218,6 +267,7 @@ export default function SignUp({ onUpdateIsRegistered }) {
         type={field.type}
         required={field.required}
       ></input>
+      )}
       {errors[field.name] && (
         <p style={{ color: "red" }}>{errors[field.name]}</p>
       )}
