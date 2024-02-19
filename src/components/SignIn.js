@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useFirebase } from "./FirebaseContext";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
 
@@ -43,6 +44,8 @@ export default function SignIn({ onUpdateIsRegistered }) {
   const [signInSuccess, setSignInSuccess] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
+  const [currentUserId, setCurrentUserId] = useState("");
+
   // Function to update a specific field in the form state
   const updateField = (fieldName, value) => {
     setFormState((prevFormState) => ({
@@ -68,28 +71,6 @@ export default function SignIn({ onUpdateIsRegistered }) {
     return ""; // No error
   };
 
-  const passwordAuth = (Username, fieldName, value) => {
-    // Retreive data from local storage
-    const storedFormData = localStorage.getItem(Username);
-    console.log("Username = ", Username);
-    console.log("fieldName = ", fieldName);
-    // Check if the Username is valid
-    if (storedFormData) {
-      const parsedData = JSON.parse(storedFormData);
-      console.log("Username is valid. Retrieved data:", parsedData);
-      if (parsedData[fieldName] === value) {
-        console.log("Field verified.");
-      } else {
-        return `${fieldName} invalid!!`;
-      }
-    } else {
-      console.log("Username is invalid");
-      return `${fieldName} is invalid`;
-    }
-
-    return "";
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -99,19 +80,8 @@ export default function SignIn({ onUpdateIsRegistered }) {
       newErrors[field.name] = validateField(field.name, formState[field.name]);
     });
 
-    // Authenticate Username and Password
-    // const newAuthErrors = {};
-    // SIGNIN_FORM_FIELDS.forEach((field) => {
-    //   newAuthErrors[field.name] = passwordAuth(
-    //     formState["Username"],
-    //     field.name,
-    //     formState[field.name]
-    //   );
-    // });
     // Update errors state with the latest validation results
     setErrors(newErrors);
-    //setAuthErrors(newAuthErrors);
-    //console.log("Errors:", newAuthErrors);
 
     // Check if there are no errors (i.e., form is valid)
     if (Object.values(newErrors).every((error) => !error)) {
@@ -122,16 +92,20 @@ export default function SignIn({ onUpdateIsRegistered }) {
       )
         .then((userCredential) => {
           const user = userCredential.user;
-          console.log("SUCCESS!");
+          setCurrentUserId(user.uid);
+          setSignInSuccess(true);
+          setShowSuccessMessage(true);
+          console.log("Sign in SUCCESS! User :", user.email);
         })
         .catch((error) => {
           const errorCode = error.code;
           const errorMessage = error.message;
+          setSignInSuccess(false);
+          setShowSuccessMessage(false);
+          console.log("Sign in FAIL!");
           console.log("Error Code: " + errorCode);
           console.log("Error Message: " + errorMessage);
         });
-      setSignInSuccess(true);
-      setShowSuccessMessage(true);
       // Hide the success message after 5 seconds
       setTimeout(() => {
         setShowSuccessMessage(false);
@@ -164,20 +138,56 @@ export default function SignIn({ onUpdateIsRegistered }) {
     </div>
   ));
 
+  const [entries, setEntries] = useState([]);
+  const [currentUserType, setCurrentUserType] = useState("");
+
   // Use useEffect to navigate to PatientUI/DoctorUI component after signInSuccess is set to true
   useEffect(() => {
+    const fetchEntries = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "Users"));
+        const fetchedEntries = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setEntries(fetchedEntries);
+      } catch (error) {
+        console.error("Error fetching entries:", error);
+      }
+    };
+    // Fetch entries from DB to check the userType
+    fetchEntries();
+    const entry = entries.find((entry) => entry.uid === currentUserId);
+    if (entry && entry.hasOwnProperty("userType")) {
+      setCurrentUserType(entry.userType);
+    } else {
+      console.log(
+        "No entry found with the current user ID or userType property not present"
+      );
+    }
+
     if (signInSuccess) {
       // Simulate a redirect to the PatientUI/DoctorUI page
       const redirectTimer = setTimeout(() => {
         // Navigate to the SignIn component or route as needed
         console.log("Signing In...");
-        const targetRoute = "/patient-ui";
-        navigate(targetRoute);
+        if (currentUserType === "patient") {
+          navigate("/patient-ui");
+        } else if (currentUserType === "doctor") {
+          navigate("/doctor-ui");
+        }
       }, 1000); // 1000 milliseconds (adjust as needed)
       // Clear the timer if the component is unmounted
       return () => clearTimeout(redirectTimer);
     }
-  }, [signInSuccess, onUpdateIsRegistered, navigate]);
+  }, [
+    currentUserId,
+    currentUserType,
+    signInSuccess,
+    onUpdateIsRegistered,
+    navigate,
+    db,
+  ]);
 
   const handleFormSwitchSignUp = () => {
     onUpdateIsRegistered(false);
