@@ -1,23 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { initializeApp } from "firebase/app";
+import { useFirebase } from "./FirebaseContext";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDvXnjcl4fyhzIXxhN-NSJFom3DLonoih0",
-  authDomain: "mental-health-journal-2605e.firebaseapp.com",
-  projectId: "mental-health-journal-2605e",
-  storageBucket: "mental-health-journal-2605e.appspot.com",
-  messagingSenderId: "725820602981",
-  appId: "1:725820602981:web:b16539f99e4678bc51248c",
-  measurementId: "G-7V9YPQPLEP"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
 
 const SIGNIN_FORM_FIELDS = [
   {
@@ -37,6 +22,10 @@ const SIGNIN_FORM_FIELDS = [
 ];
 
 export default function SignIn({ onUpdateIsRegistered }) {
+  // Firebase db
+  const db = useFirebase();
+  const auth = getAuth();
+
   const navigate = useNavigate();
   // Initialize form state based on SIGNIN_FORM_FIELDS
   const initialFormState = SIGNIN_FORM_FIELDS.reduce((acc, field) => {
@@ -125,20 +114,22 @@ export default function SignIn({ onUpdateIsRegistered }) {
     //console.log("Errors:", newAuthErrors);
 
     // Check if there are no errors (i.e., form is valid)
-    if (
-      Object.values(newErrors).every((error) => !error)
-    ) {
-      signInWithEmailAndPassword(auth, formState['Username'], formState['Password'])
-      .then((userCredential) => {
-        const user = userCredential.user;
-        console.log('SUCCESS!')
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log("Error Code: " + errorCode);
-        console.log("Error Message: " + errorMessage);        
-      });
+    if (Object.values(newErrors).every((error) => !error)) {
+      signInWithEmailAndPassword(
+        auth,
+        formState["Username"],
+        formState["Password"]
+      )
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log("SUCCESS!");
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.log("Error Code: " + errorCode);
+          console.log("Error Message: " + errorMessage);
+        });
       setSignInSuccess(true);
       setShowSuccessMessage(true);
       // Hide the success message after 5 seconds

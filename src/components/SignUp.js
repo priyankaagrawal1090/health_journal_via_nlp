@@ -1,23 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { initializeApp } from "firebase/app";
+import { useFirebase } from "./FirebaseContext";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, doc, setDoc, collection } from "firebase/firestore/lite"
+import { getFirestore, doc, setDoc } from "firebase/firestore/lite";
 import "../App.css";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDvXnjcl4fyhzIXxhN-NSJFom3DLonoih0",
-  authDomain: "mental-health-journal-2605e.firebaseapp.com",
-  projectId: "mental-health-journal-2605e",
-  storageBucket: "mental-health-journal-2605e.appspot.com",
-  messagingSenderId: "725820602981",
-  appId: "1:725820602981:web:b16539f99e4678bc51248c",
-  measurementId: "G-7V9YPQPLEP"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const firestore = getFirestore();
 
 const SIGNUP_FORM_FIELDS = [
   {
@@ -42,7 +27,7 @@ const SIGNUP_FORM_FIELDS = [
     options: [
       { label: "Male", value: "male" },
       { label: "Female", value: "female" },
-      { label: "Other", value: "other" }
+      { label: "Other", value: "other" },
     ],
     required: true,
   },
@@ -74,10 +59,10 @@ const SIGNUP_FORM_FIELDS = [
     type: "radio",
     options: [
       { label: "Patient", value: "patient" },
-      { label: "Doctor", value: "doctor" }
+      { label: "Doctor", value: "doctor" },
     ],
     required: true,
-  }
+  },
 ];
 
 const PASSWORD_MIN_LENGTH = 8;
@@ -85,31 +70,13 @@ const PASSWORD_MIN_UPPER_CASE_CHAR = 1;
 const PASSWORD_MIN_LOWER_CASE_CHAR = 1;
 const PASSWORD_MIN_DIGITS = 1;
 const PASSWORD_MIN_SPECIAL_CHAR = 1;
-// const PASSWORD_SPECIAL_CHAR_LIST = [
-//   "!",
-//   "@",
-//   "#",
-//   "%",
-//   "&",
-//   "*",
-//   "(",
-//   ")",
-//   "_",
-//   "+",
-//   "=",
-//   "[",
-//   "{",
-//   "]",
-//   "}",
-//   ":",
-//   ";",
-//   "<",
-//   ">",
-// ];
-
 const PASSWORD_SPECIAL_CHAR_LIST = ["@", "#", "%", "&", "*", "_"];
 
 export default function SignUp({ onUpdateIsRegistered }) {
+  // Firebase db
+  const db = useFirebase();
+  const auth = getAuth();
+
   // Initialize form state based on SIGNUP_FORM_FIELDS
   const initialFormState = SIGNUP_FORM_FIELDS.reduce((acc, field) => {
     acc[field.name] = ""; // Initialize each field with an empty string
@@ -204,28 +171,35 @@ export default function SignUp({ onUpdateIsRegistered }) {
       // Store form data in local storage
       //localStorage.setItem(formState.Username, JSON.stringify(formState));
       //console.log("Form submitted with state:", formState);
-      createUserWithEmailAndPassword(auth, formState['Username'], formState['Password']).then((userCredential) => {
-        const user = userCredential.user;
-        const usersRef = doc(firestore, 'Users', user.uid);
-        const userData = {
-          uid: user.uid,
-          email: formState['Username'],
-          firstName: formState['FirstName'],
-          lastName: formState['LastName'],
-          userType: formState['UserType'],
-        };
-        setDoc(usersRef, userData);
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log("Error Code: " + errorCode);
-        console.log("Error Message: " + errorMessage);
-      });
-
-      // Set signUpSuccess to true
-      setSignUpSuccess(true);
-      setShowSuccessMessage(true);
+      createUserWithEmailAndPassword(
+        auth,
+        formState["Username"],
+        formState["Password"]
+      )
+        .then((userCredential) => {
+          const user = userCredential.user;
+          const usersRef = doc(getFirestore(), "Users", user.uid);
+          const userData = {
+            uid: user.uid,
+            email: formState["Username"],
+            firstName: formState["FirstName"],
+            lastName: formState["LastName"],
+            userType: formState["UserType"],
+          };
+          setDoc(usersRef, userData);
+          // Set signUpSuccess to true
+          setSignUpSuccess(true);
+          setShowSuccessMessage(true);
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          console.log("Error Code: " + errorCode);
+          console.log("Error Message: " + errorMessage);
+          // Set signUpSuccess to true
+          setSignUpSuccess(false);
+          setShowSuccessMessage(false);
+        });
 
       // Hide the success message after 5 seconds
       setTimeout(() => {
@@ -241,32 +215,34 @@ export default function SignUp({ onUpdateIsRegistered }) {
 
   const formFields = SIGNUP_FORM_FIELDS.map((field) => (
     <div className="form-container">
-      <label  className="col-4 card-text" for={field.name}>{field.title}:</label>
-      {field.type==="radio" ? (
+      <label className="col-4 card-text" for={field.name}>
+        {field.title}:
+      </label>
+      {field.type === "radio" ? (
         <div>
-        {field.options.map((option) => (
-          <div key={option.value}>
-            <input 
-              id={option.value}
-              name={field.name}
-              type="radio"
-              value={option.value}
-              checked={formState[field.name] === option.value}
-              onChange={(e) => updateField(field.name, e.target.value)}
-              required={field.required}
-            />
-            <label htmlFor={option.value}>{option.label}</label>
-          </div>
-        ))}
-      </div>
+          {field.options.map((option) => (
+            <div key={option.value}>
+              <input
+                id={option.value}
+                name={field.name}
+                type="radio"
+                value={option.value}
+                checked={formState[field.name] === option.value}
+                onChange={(e) => updateField(field.name, e.target.value)}
+                required={field.required}
+              />
+              <label htmlFor={option.value}>{option.label}</label>
+            </div>
+          ))}
+        </div>
       ) : (
-      <input
-        className=""
-        value={formState[field.name]}
-        onChange={(e) => updateField(field.name, e.target.value)}
-        type={field.type}
-        required={field.required}
-      ></input>
+        <input
+          className=""
+          value={formState[field.name]}
+          onChange={(e) => updateField(field.name, e.target.value)}
+          type={field.type}
+          required={field.required}
+        ></input>
       )}
       {errors[field.name] && (
         <p style={{ color: "red" }}>{errors[field.name]}</p>
