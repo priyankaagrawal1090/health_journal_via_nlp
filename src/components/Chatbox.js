@@ -33,12 +33,20 @@ export default class Chatbox extends Component {
     let output = await hf.textGeneration({
       model: "mistralai/Mistral-7B-Instruct-v0.2",
       inputs: userInput,
+      parameters: {
+        max_new_tokens: 125,
+      }
     });
-
+    let output_trimmed = output.generated_text.substring(userInput.length);
+    let output_complete = output_trimmed.match(/\(?[^\.\?\!]+[\.!\?]\)?/g);
+    let last_sentence = output_complete.at(output_complete.length - 1);
+    if(last_sentence.charAt(last_sentence.length - 1) == '?') {
+      output_complete = output_complete.slice(0, output_complete.length - 1);
+    }
     //Add the response to the list
     updateMessages = [
       ...this.state.messages,
-      { text: output["generated_text"], user: "bot" },
+      { text: output_complete.toString(), user: "bot" },
     ];
 
     this.setState({ messages: updateMessages });

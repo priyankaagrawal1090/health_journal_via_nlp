@@ -182,6 +182,8 @@ export default function SignUp({ onUpdateIsRegistered }) {
           const userData = {
             uid: user.uid,
             email: formState["Username"],
+            pNum: formState["PhoneNumber"],
+            gender: formState["Gender"],
             firstName: formState["FirstName"],
             lastName: formState["LastName"],
             userType: formState["UserType"],
