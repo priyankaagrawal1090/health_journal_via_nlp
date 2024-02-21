@@ -5,6 +5,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import PatientUI from "./components/PatientUI";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import DoctorUI from "./components/DoctorUI";
+import BookingAppointmentUI from "./components/BookingAppointmentUI";
 
 function App() {
   return (

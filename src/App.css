@@ -72,8 +72,7 @@
 }
 
 
-
-.auth-form {
+ .auth-form {
   display: flex;
   flex-direction: column; /* Display form fields in a column */
   align-items: center; /* Center form fields horizontally */
@@ -82,6 +81,19 @@
   color:#000;
   padding: 10px;
   border-radius: 20px;
+   overflow-y: auto; /* Enable vertical scrolling if the content exceeds the height */
+} 
+
+@media (max-width: 768px) {
+  .auth-form {
+    padding: 5px;
+  }
+
+  .form-container {
+    flex-direction: column;
+    padding: 10px;
+    font-size: medium;
+  }
 }
 
 .auth-form .form-container .form-field {
@@ -168,7 +180,7 @@ bar */
   display: flex;
   justify-content: center;
   padding: 20px;
-  font-size: 2vw;
+  font-size:xx-large;
   color:white;
   text-decoration: none;
 }
@@ -197,8 +209,8 @@ bar */
 }
 
 .img-logo {
-  padding: 20px;
-  font-size: 2vw;
+  padding: 10px;
+  font-size: xx-large;
 }
 
 /* Patient UI */
@@ -432,4 +444,62 @@ button {
 /* Font Awesome Icons (Assuming you're using Font Awesome) */
 .fa {
   font-size: 24px;
+}
+
+.homeSection{
+  margin: 0px;
+  padding-left: 10px;
+  padding-bottom: 100px;
+}
+
+.homeSection h1{
+  font-weight:900;
+}
+
+.homeSection h2{
+  font-weight:500;
+  color: rgb(240, 244, 245) ;
+}
+
+.checked-slogan-item{
+  color: #61dafb;
+}
+
+/* .aboutContent{
+  text-align: center;
+  margin-top:0%;
+  padding: 0%;
+}
+
+.about-feature{
+  padding: 80px;
+}
+
+.about-feature.p {
+  padding: 20px;
+  margin: 10px;
+} */
+
+
+
+.about-features{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-gap: 40px ;
+}
+
+.feature{
+  border: 1px solid rgb(123, 119, 119);
+  border-radius: 3px;
+  padding: 20px;
+  margin-top: 70px;
+}
+
+.feature h4{
+  color: #61dafb;
+  margin-bottom: 10px;
+}
+
+.feature p{
+  margin-top: 30px;
 }
