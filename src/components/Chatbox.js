@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-
+import axios from 'axios';
 import { HfInference } from "@huggingface/inference";
 import "../App.css";
 
@@ -19,7 +19,8 @@ export default class Chatbox extends Component {
   };
 
   handleSendMessage = async () => {
-    const hf = new HfInference("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");
+    // const sseUrl = 'http://192.168.1.10:5000/events';
+    // const eventSource = new EventSource(sseUrl);
     const { userInput, messages } = this.state;
     // const { messages, userInput } = this.state;
 
@@ -29,37 +30,50 @@ export default class Chatbox extends Component {
     let updateMessages = [...messages, { text: userInput, user: "user" }];
 
     this.setState({ messages: updateMessages, userInput: "" });
+    const userQuestion = new FormData();
+    userQuestion.append('prompt', userInput)
+    axios.post('http://192.168.1.10:5000/userintent', userQuestion).then(response => {
+      if(response.data.user_intent.includes("CHAT_WITH_CHATBOT")) {
+        axios.post('http://192.168.1.10:5000/chatresponse', userQuestion).then(response => {
+          console.log(response.data);
+          updateMessages = [
+            ...this.state.messages,
+            { text: response.data.chat_response, user: "bot" },
+          ];
+          this.setState({ messages: updateMessages });
+        }).catch(error => {
+          console.error(error);
+        });
+      } else if(response.data.user_intent.includes("SEARCH_FOR_RESOURCES")) {
+        axios.post('http://192.168.1.10:5000/process_query', {query: userInput}).then(response => {
+          console.log("LINKS:", response.data.links);
+          let top_5_links = response.data.links.slice(0, 5);
+          let top5linkstr = "";
+          for(let i = 0; i < top_5_links.length; i++) {
+            top5linkstr += top_5_links[i];
+            if(i != top_5_links.length - 1) {
+              top5linkstr += '\n\n';
+            }
+          }
+          updateMessages = [
+            ...this.state.messages,
+            { text: top5linkstr, user: "bot" },
+          ];
+          this.setState({ messages: updateMessages });
+        }).catch(error => {
+          console.error(error);
+        });
 
-    let output = await hf.textGeneration({
-      model: "mistralai/Mistral-7B-Instruct-v0.2",
-      inputs: userInput,
-      parameters: {
-        max_new_tokens: 125,
+      } else {
+        updateMessages = [
+          ...this.state.messages,
+          { text: "Appointment booking still being worked on!", user: "bot" },
+        ];
+        this.setState({ messages: updateMessages });
       }
+    }).catch(error => {
+      console.error(error);
     });
-    let output_trimmed = output.generated_text.substring(userInput.length);
-    let output_complete = output_trimmed.match(/\(?[^\.\?\!]+[\.!\?]\)?/g);
-    let last_sentence = output_complete.at(output_complete.length - 1);
-    if(last_sentence.charAt(last_sentence.length - 1) == '?') {
-      output_complete = output_complete.slice(0, output_complete.length - 1);
-    }
-    //Add the response to the list
-    updateMessages = [
-      ...this.state.messages,
-      { text: output_complete.toString(), user: "bot" },
-    ];
-
-    this.setState({ messages: updateMessages });
-
-    // Simulate a response (for demo only)
-    // setTimeout(() => {
-    //     let response = 'Sample response from bot';
-
-    //     // Add the response to the list
-    //     const updateMessages = [...this.state.messages, { text: response, user: 'bot'}];
-
-    //     this.setState({ messages: updateMessages });
-    // }, 1000);
   };
 
   handleKeyDown = (e) => {

@@ -74,7 +74,7 @@ export function Sidebar() {
         <div className="sidebar-logout">
           <i className="fa fa-sign-out" />
         </div>
-        {showBookingUI && (
+        {/* {showBookingUI && (
           <BookingAppointmentUI
             doctors={doctorsData}
             onBookAppointment={handleBookAppointment}
@@ -82,7 +82,7 @@ export function Sidebar() {
         )}
         <div className="sidebar-book-aapointment">
           <button onClick={handleBookAppointmentClick}>Book Appointment</button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
