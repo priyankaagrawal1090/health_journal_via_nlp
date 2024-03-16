@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useFirebase } from "./FirebaseContext";
+import { initializeApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +22,18 @@ const SIGNIN_FORM_FIELDS = [
     required: true,
   },
 ];
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDvXnjcl4fyhzIXxhN-NSJFom3DLonoih0",
+  authDomain: "mental-health-journal-2605e.firebaseapp.com",
+  projectId: "mental-health-journal-2605e",
+  storageBucket: "mental-health-journal-2605e.appspot.com",
+  messagingSenderId: "725820602981",
+  appId: "1:725820602981:web:b16539f99e4678bc51248c",
+  measurementId: "G-7V9YPQPLEP"
+};
+
+const app = initializeApp(firebaseConfig);
 
 export default function SignIn({ onUpdateIsRegistered }) {
   // Firebase db
