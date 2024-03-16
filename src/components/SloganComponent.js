@@ -8,7 +8,6 @@ function SloganComponent() {
         texts={[
           "Access personalized support",
           "Receive instant assistance",
-          "Join a supportive community",
           "Benefit from expert guidance",
         ]}
       />
