@@ -28,30 +28,6 @@ export function HorizontalNavbar() {
 }
 
 export function Sidebar() {
-  const [showBookingUI, setShowBookingUI] = useState(false);
-
-  const handleBookAppointmentClick = () => {
-    setShowBookingUI(true);
-  };
-
-  // Temporary data for doctors and time slots
-  const doctorsData = [
-    {
-      name: "Dr. Smith",
-      timeSlots: ["9:00 AM", "10:00 AM", "11:00 AM"],
-    },
-    {
-      name: "Dr. Johnson",
-      timeSlots: ["1:00 PM", "2:00 PM", "3:00 PM"],
-    },
-  ];
-
-  // Define the function to handle booking appointment
-  const handleBookAppointment = (appointmentDetails) => {
-    // Here you can implement the logic to handle booking appointment
-    console.log("Booking appointment:", appointmentDetails);
-    // For now, let's just log the appointment details
-  };
 
   return (
     <div className="sidebar">
@@ -74,15 +50,38 @@ export function Sidebar() {
         <div className="sidebar-logout">
           <i className="fa fa-sign-out" />
         </div>
-        {/* {showBookingUI && (
-          <BookingAppointmentUI
-            doctors={doctorsData}
-            onBookAppointment={handleBookAppointment}
-          />
-        )}
-        <div className="sidebar-book-aapointment">
-          <button onClick={handleBookAppointmentClick}>Book Appointment</button>
-        </div> */}
+      </div>
+    </div>
+  );
+}
+
+export function DoctorSidebar() {
+
+  return (
+    <div className="sidebar">
+      <div className="sidebar-profile">
+        <div className="profile-picture">
+          <i className="fa fa-user-circle-o" />
+        </div>
+        <div className="profile-info">
+          <Link to="/doctor-ui/create-time-slot">
+            <i className="fa fa-users" />
+          </Link>
+        </div>
+      </div>
+
+      <div className="sidebar-nav">
+        <div className="sidebar-home">
+          <Link to="/doctor-ui/view-appointments">
+            <i className="fa fa-home" />
+          </Link>
+        </div>
+        <div className="sidebar-settings">
+          <i className="fa fa-cog" />
+        </div>
+        <div className="sidebar-logout">
+          <i className="fa fa-sign-out" />
+        </div>
       </div>
     </div>
   );

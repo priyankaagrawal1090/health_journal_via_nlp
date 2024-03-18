@@ -3,6 +3,7 @@ import {Box, Card, CardActions, CardContent, Typography, Button} from '@mui/mate
 import '../App.css'
 
 export default function PendingAppointmentCard (props) {
+
   return (
         <Card sx={{ maxWidth: 345 }}>
             <CardContent>
@@ -17,7 +18,6 @@ export default function PendingAppointmentCard (props) {
                 </Typography>
             </CardContent>
             <CardActions>
-                <Button size='small'>Accept</Button>
                 <Button size='small'>Decline</Button>
             </CardActions>
         </Card>

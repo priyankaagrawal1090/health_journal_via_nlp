@@ -21,7 +21,7 @@ const db = getFirestore();
 
 const fetchUserData = async () => {
   const user = getAuth().currentUser;
-  if(user) {
+  if (user) {
     const userDataDocRef = doc(db, "Users", user.uid);
     const userDataDocSnap = await getDoc(userDataDocRef);
     if (userDataDocSnap.exists()) {
@@ -30,8 +30,8 @@ const fetchUserData = async () => {
       return null;
     }
   }
-} 
-export default function PatientUI () {
+}
+export default function PatientUI() {
   const [userData, setUserData] = useState(null);
   useEffect(() => {
     async function fetchData() {
@@ -40,15 +40,15 @@ export default function PatientUI () {
     }
     fetchData();
   }, []);
-  if(userData != null) {
+  if (userData != null) {
     console.log("USER DATA:", userData);
     return (
       <div className="div-patientUI">
         <div className="div-sidebar">
-          <Sidebar/>
+          <Sidebar />
         </div>
         <div className="div-chatbox">
-          <Chatbox/>
+          <Chatbox userId={userData.uid} />
         </div>
       </div>
     );
@@ -57,6 +57,6 @@ export default function PatientUI () {
       <div className="div-patientUI">
         <p>Not signed in...</p>
       </div>
-    )      
+    )
   }
 }
