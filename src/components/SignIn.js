@@ -419,7 +419,7 @@ import React, { useState, useEffect } from "react";
 import { useFirebase } from "./FirebaseContext";
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, getFirestore } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { Typography } from "@mui/material";
 import { Grid } from "@mui/material";

@@ -45,7 +45,6 @@ export default class Chatbox extends Component {
     console.log(slots);
     return slots;
   }
-
   fetchDoctorById = async (doctorId) => {
     const doctorDocRef = doc(db, "Users", doctorId);
     const doctorDataSnap = await getDoc(doctorDocRef);
@@ -81,15 +80,26 @@ export default class Chatbox extends Component {
 
   handleSendMessage = async () => {
     const { userInput, messages, stop, timeSlots } = this.state;
-
+    if(userInput !== ""){
+      this.props.showWelcomeText(false);
+    }
     if (userInput.trim() === "") return; // Prevent sending empty messages
+
 
     // Add the user's message to the list
     let updateMessages = [...messages, { text: userInput, user: "user" }];
 
+
+    
+
+    // useEffect(() => {
+      
+    // }, [messages]);
+
     this.setState({ messages: updateMessages, userInput: "" });
+
     if (stop) {
-      if(isNaN(userInput) == true) {
+      if(isNaN(userInput) === true) {
         let parsedDate = userInput.split("/");
         let firebaseDateFormat = parsedDate[2] + "-" + parsedDate[0] + "-" + parsedDate[1];
         let availableTimeSlots = await this.fetchTimeSlots(firebaseDateFormat);
@@ -119,20 +129,37 @@ export default class Chatbox extends Component {
       }
     } else {
       const userQuestion = new FormData();
-      userQuestion.append('prompt', userInput);
-      let userIntent = await this.fetchUserIntent(userQuestion);
-        if (userIntent.includes("CHAT_WITH_CHATBOT")) {
-          let chatResponse = await this.fetchChatResponse(userQuestion);
-          updateMessages = [
-            ...this.state.messages,
-            { text: chatResponse, user: "bot" },
-          ];
-        } else if (userIntent.includes("SEARCH_FOR_RESOURCES")) {
-          let urls = await this.fetchResources(userInput);
-          updateMessages = [
-            ...this.state.messages,
-            { text: urls, user: "bot" },
-          ];
+
+      userQuestion.append('prompt', userInput)
+      axios.post('http://192.168.1.10:5000/userintent', userQuestion).then(response => {
+        if (response.data.user_intent.includes("CHAT_WITH_CHATBOT")) {
+          axios.post('http://192.168.1.10:5000/chatresponse', userQuestion).then(response => {
+            updateMessages = [
+              ...this.state.messages,
+              { text: response.data.chat_response, user: "bot" },
+            ];
+            this.setState({ messages: updateMessages });
+          }).catch(error => {
+            console.error(error);
+          });
+        } else if (response.data.user_intent.includes("SEARCH_FOR_RESOURCES")) {
+          axios.post('http://192.168.1.10:5000/process_query', { query: userInput }).then(response => {
+            let top_5_links = response.data.links.slice(0, 5);
+            let top5linkstr = "";
+            for (let i = 0; i < top_5_links.length; i++) {
+              top5linkstr += top_5_links[i];
+              if (i !== top_5_links.length - 1) {
+                top5linkstr += '\n\n';
+              }
+            }
+            updateMessages = [
+              ...this.state.messages,
+              { text: top5linkstr, user: "bot" },
+            ];
+            this.setState({ messages: updateMessages });
+          }).catch(error => {
+            console.error(error);
+          });
         } else {
           this.setState({stop: true});
           updateMessages = [

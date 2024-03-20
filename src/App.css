@@ -243,84 +243,53 @@ bar */
 /* Chatbox */
 
 /* Chat Container */
+/* Chat Container */
+/* Chat Container */
 .chat-container {
   display: flex;
   flex-direction: column-reverse; /* Messages grow upward */
   width: 100%;
   margin: 0 auto;
-  /* border: 1px solid #ccc; */
-  /* height: 100%; */
-  flex-grow: 1; /* Expand to fill available space */
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: #333; /* Two shades lighter than black */
+  flex-grow: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background-color:#000; /* Light gray background */
 }
 
 /* Chat Messages */
 .chat-messages {
-  padding: 10px;
+  padding: 5px;
   display: flex;
   flex-direction: column;
-  max-height: 100%; /* Add a max height for scrolling */
+  max-height: calc(100vh - 120px); /* Adjusted to leave space for input */
   overflow-y: auto; /* Enable vertical scrolling */
-  background-color: #333; /* Two shades lighter than black */
+  background-color:#000;
 }
 
 /* Message Bubbles */
 .message {
-  max-width: 70%;
-  padding: 10px;
-  margin: 5px;
-  border-radius: 10px;
-  word-wrap: break-word;
-  clear: both;
+  display: flex;
+  align-items: flex-end; /* Align messages to the bottom */
+  margin: 5px 0;
 }
 
 /* User Message */
 .user {
-  background-color: #333;
-  color: #333;
-  align-self: flex-end;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  flex-direction: row-reverse;
-  text-align: center;
-  padding: 10px;
+  justify-content: flex-end; /* Align user messages to the right */
 }
 
 /* Bot Message */
 .bot {
-  background-color: #333;
-  color: white;
-  align-self: flex-start;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  text-align: center;
-  padding: 10px;
-}
-
-/* User and Bot Name Bubbles */
-.name-bubble {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 50%; /* Make it a circle */
-  width: 60px; /* Adjust width as needed */
-  height: 60px; /* Adjust height as needed */
-  background-color: #007bff; /* User and bot name bubble color */
-  color: white;
-  margin: 10px;
-  font-weight: bold;
-  font-size: 16px;
+  justify-content: flex-start; /* Align bot messages to the left */
 }
 
 /* Message Text */
 .message-text {
-  background-color: #f7f7f7;
+  max-width: 60%; /* Limit message width */
   padding: 10px;
-  border-radius: 5px 5px 5px 5px;
+  border-radius: 10px;
+  background-color:#6c757d; /* White background for messages */
+  box-shadow: 0 2px 4px #dee2e6;; /* Add shadow for depth */
 }
 
 /* Chat Input */
@@ -328,75 +297,31 @@ bar */
   display: flex;
   align-items: center;
   padding: 10px;
-  background-color: #333; /* Two shades lighter than black */
+  background-color:#000; /* White background for input area */
+  border-top: 1px solid #ccc; /* Add separator line */
 }
 
 input[type="text"] {
   flex: 1;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 5px;
+  border: none;
+  border-radius: 20px; /* Rounded input field */
+  padding: 10px 15px;
   margin-right: 10px;
+  box-shadow: 0 2px 4px #6c757d; /* Add shadow for depth */
 }
 
 button {
-  background-color: #007bff;
-  color: white;
+  background-color:#000; /* Blue button color */
+  color:white;
   border: none;
-  border-radius: 5px;
-  padding: 5px 10px;
+  border-radius: 20px; /* Rounded button */
+  padding: 10px 20px;
   cursor: pointer;
+  transition: background-color 0.3s ease; /* Smooth transition */
 }
 
-
-.user-bubble {
-    display: flex;
-    align-self: flex-end;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    background-color: #333;
-    color: white;
-    font-weight: bold;
-    font-size: 16px;
-    margin-right: 10px;
-}
-
-/* Bot Bubble */
-.bot-bubble {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    background-color: #333;
-    color: white;
-    font-weight: bold;
-    font-size: 16px;
-    margin-right: 10px;
-}
-
-/* Message Bubbles */
-.message {
-    display: flex;
-    margin: 10px;
-    padding: 50px;
-    border-radius: 10px;
-    font-size: 16px;
-}
-
-/* Message Text */
-.message-text {
-    background-color: white;
-    color: #333;
-}
-
-.message.bot .message-text {
-    background-color: #f7f7f7;
-    color: #333;
+button:hover {
+  background-color:#000; /* Darker blue on hover */
 }
 
 
@@ -407,6 +332,7 @@ button {
   flex-direction: column;
   position: relative;
   flex-grow: 1;
+  background-color: #6c757d;
 }
 
 .sidebar-profile {
@@ -416,6 +342,7 @@ button {
   align-items: center;
   flex: 40%;
   padding: 10px;
+  background-color: #6c757d;
 }
 
 /* Profile Picture and Info Styling */
@@ -431,6 +358,7 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  background-color: #6c757d;
 }
 
 /* Navigation Items Styling */
