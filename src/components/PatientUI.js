@@ -20,7 +20,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore();
 
 const fetchUserData = async () => {
-  const user = getAuth().currentUser;
+  const auth = await getAuth();
+  const user = auth.currentUser;
   if (user) {
     const userDataDocRef = doc(db, "Users", user.uid);
     const userDataDocSnap = await getDoc(userDataDocRef);
@@ -33,13 +34,22 @@ const fetchUserData = async () => {
 }
 export default function PatientUI() {
   const [userData, setUserData] = useState(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [showWelcomeText, setWelcomeText] = useState(true);
+
   useEffect(() => {
     async function fetchData() {
       let data = await fetchUserData();
+      console.log(data);
       setUserData(data);
+      
     }
     fetchData();
+    console.log(userData);
   }, []);
+  const handleInputChange = (event) => {
+    setIsTyping(event.target.value !== '');
+  };
   if (userData != null) {
     console.log("USER DATA:", userData);
     return (
@@ -47,8 +57,15 @@ export default function PatientUI() {
         <div className="div-sidebar">
           <Sidebar />
         </div>
+        
         <div className="div-chatbox">
-          <Chatbox userId={userData.uid} />
+          {showWelcomeText && 
+            <div className="div-main-content">
+              <h1>{isTyping ? "" : "Welcome to the Chat!"}</h1>
+            </div>
+          }
+          
+          <Chatbox showWelcomeText={setWelcomeText} userId={userData.uid} />
         </div>
       </div>
     );

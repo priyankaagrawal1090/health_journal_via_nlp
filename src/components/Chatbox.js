@@ -45,7 +45,6 @@ export default class Chatbox extends Component {
     console.log(slots);
     return slots;
   }
-
   fetchDoctorById = async (doctorId) => {
     const doctorDocRef = doc(db, "Users", doctorId);
     const doctorDataSnap = await getDoc(doctorDocRef);
@@ -57,15 +56,26 @@ export default class Chatbox extends Component {
 
   handleSendMessage = async () => {
     const { userInput, messages, stop, timeSlots } = this.state;
-
+    if(userInput !== ""){
+      this.props.showWelcomeText(false);
+    }
     if (userInput.trim() === "") return; // Prevent sending empty messages
+
 
     // Add the user's message to the list
     let updateMessages = [...messages, { text: userInput, user: "user" }];
 
+
+    
+
+    // useEffect(() => {
+      
+    // }, [messages]);
+
     this.setState({ messages: updateMessages, userInput: "" });
+
     if (stop) {
-      if(isNaN(userInput) == true) {
+      if(isNaN(userInput) === true) {
         let parsedDate = userInput.split("/");
         let firebaseDateFormat = parsedDate[2] + "-" + parsedDate[0] + "-" + parsedDate[1];
         let availableTimeSlots = await this.fetchTimeSlots(firebaseDateFormat);
@@ -113,7 +123,7 @@ export default class Chatbox extends Component {
             let top5linkstr = "";
             for (let i = 0; i < top_5_links.length; i++) {
               top5linkstr += top_5_links[i];
-              if (i != top_5_links.length - 1) {
+              if (i !== top_5_links.length - 1) {
                 top5linkstr += '\n\n';
               }
             }

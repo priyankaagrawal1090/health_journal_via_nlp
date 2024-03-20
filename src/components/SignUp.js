@@ -74,7 +74,7 @@ const PASSWORD_SPECIAL_CHAR_LIST = ["@", "#", "%", "&", "*", "_"];
 
 export default function SignUp({ onUpdateIsRegistered }) {
   // Firebase db
-  const db = useFirebase();
+  const db= useFirebase();
   const auth = getAuth();
 
   // Initialize form state based on SIGNUP_FORM_FIELDS
