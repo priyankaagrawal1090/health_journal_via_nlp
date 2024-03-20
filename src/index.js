@@ -6,6 +6,8 @@ import reportWebVitals from "./reportWebVitals";
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore"; // Import other Firebase services if needed
 import { FirebaseProvider } from "./components/FirebaseContext";
+import { ThemeProvider } from "@mui/material/styles";
+import theme from "./theme";
 
 // Initialize firebase here and use across all components
 const firebaseConfig = {
@@ -25,7 +27,9 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <FirebaseProvider db={db}>
-      <App />
+      <ThemeProvider theme={theme}>
+        <App />
+      </ThemeProvider>
     </FirebaseProvider>
   </React.StrictMode>
 );

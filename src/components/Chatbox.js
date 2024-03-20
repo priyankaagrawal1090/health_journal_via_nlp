@@ -54,6 +54,30 @@ export default class Chatbox extends Component {
     return null;
   }
 
+  fetchResources = async (userInput) => {
+    let response = await axios.post('http://192.168.1.10:5000/process_query', { query: userInput });
+    console.log("RESP: ", response);
+    let top_5_links = response.data.links.slice(0, 5);
+    let top5linkstr = "";
+    for (let i = 0; i < top_5_links.length; i++) {
+      top5linkstr += top_5_links[i];
+      if (i != top_5_links.length - 1) {
+        top5linkstr += '\n\n';
+      }
+    }
+    return top5linkstr; 
+  }
+
+  fetchChatResponse = async (userQuestion) => {
+    let response = await axios.post('http://192.168.1.10:5000/chatresponse', userQuestion);
+    return response.data.chat_response;
+  }
+
+  fetchUserIntent = async (userQuestion) => {
+    let response = await axios.post('http://192.168.1.10:5000/userintent', userQuestion);
+    return response.data.user_intent;
+  }
+
   handleSendMessage = async () => {
     const { userInput, messages, stop, timeSlots } = this.state;
     if(userInput !== ""){
@@ -105,6 +129,7 @@ export default class Chatbox extends Component {
       }
     } else {
       const userQuestion = new FormData();
+
       userQuestion.append('prompt', userInput)
       axios.post('http://192.168.1.10:5000/userintent', userQuestion).then(response => {
         if (response.data.user_intent.includes("CHAT_WITH_CHATBOT")) {
@@ -135,17 +160,14 @@ export default class Chatbox extends Component {
           }).catch(error => {
             console.error(error);
           });
-
         } else {
+          this.setState({stop: true});
           updateMessages = [
             ...this.state.messages,
             { text: "I would be glad to assist you in booking an appointment! What date would you like to book for? Enter the date in the format mm/dd/yyyy", user: "bot" },
           ];
-          this.setState({ stop: true, messages: updateMessages });
         }
-      }).catch(error => {
-        console.error(error);
-      });
+        this.setState({ messages: updateMessages });
     }
   };
 

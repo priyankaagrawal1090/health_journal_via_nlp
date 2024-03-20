@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useFirebase } from "./FirebaseContext";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore/lite";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { Typography } from "@mui/material";
+import { Grid } from "@mui/material";
+import { Box } from "@mui/material";
+import Container from "@mui/material/Container";
+import Avatar from "@mui/material/Avatar";
+import TextField from "@mui/material/TextField";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import Stack from "@mui/material/Stack";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Button from "@mui/material/Button";
+import theme from "../theme";
 import "../App.css";
 
 const SIGNUP_FORM_FIELDS = [
@@ -23,7 +39,7 @@ const SIGNUP_FORM_FIELDS = [
     id: 2,
     name: "Gender",
     title: "Gender",
-    type: "radio",
+    type: "select",
     options: [
       { label: "Male", value: "male" },
       { label: "Female", value: "female" },
@@ -72,42 +88,37 @@ const PASSWORD_MIN_DIGITS = 1;
 const PASSWORD_MIN_SPECIAL_CHAR = 1;
 const PASSWORD_SPECIAL_CHAR_LIST = ["@", "#", "%", "&", "*", "_"];
 
-export default function SignUp({ onUpdateIsRegistered }) {
-  // Firebase db
-  const db= useFirebase();
+export default function SignUp({
+  darkTheme,
+  signinBoxStyle,
+  onUpdateIsRegistered,
+}) {
+  const db = useFirebase();
   const auth = getAuth();
 
-  // Initialize form state based on SIGNUP_FORM_FIELDS
   const initialFormState = SIGNUP_FORM_FIELDS.reduce((acc, field) => {
-    acc[field.name] = ""; // Initialize each field with an empty string
+    acc[field.name] = "";
     return acc;
   }, {});
 
-  // Define a state variable with multiple form fields
   const [formState, setFormState] = useState(initialFormState);
-  // Create a state variable to manage error messages
   const [errors, setErrors] = useState({});
-
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  // Function to update a specific field in the form state
   const updateField = (fieldName, value) => {
     setFormState((prevFormState) => ({
       ...prevFormState,
       [fieldName]: value,
     }));
 
-    // Validate the field and update errors state
     setErrors((prevErrors) => ({
       ...prevErrors,
       [fieldName]: validateField(fieldName, value),
     }));
   };
 
-  // Validation function for a specific field
   const validateField = (fieldName, value) => {
-    // Check if the field is required and not empty for all required fields
     if (
       SIGNUP_FORM_FIELDS.find((field) => field.name === fieldName)?.required &&
       !value.trim()
@@ -115,12 +126,6 @@ export default function SignUp({ onUpdateIsRegistered }) {
       return `${fieldName} is required.`;
     }
 
-    // Check if password field value meets the following conditions:
-    // Password must be greater than 8 characters in length.
-    // Password must contain at least one uppercase character.
-    // Password must contain at least one lowercase character.
-    // Password must contain at least one digit.
-    // Password must contain at least one special character.
     if (
       SIGNUP_FORM_FIELDS.find((field) => field.name === fieldName)?.type ===
       "password"
@@ -140,7 +145,6 @@ export default function SignUp({ onUpdateIsRegistered }) {
       let specialCharRegex = new RegExp(
         `[${PASSWORD_SPECIAL_CHAR_LIST.join("")}]`
       );
-      //   console.log(specialCharRegex);
       if (
         (value.match(specialCharRegex) || []).length < PASSWORD_MIN_SPECIAL_CHAR
       ) {
@@ -150,27 +154,20 @@ export default function SignUp({ onUpdateIsRegistered }) {
       }
     }
 
-    return ""; // No error
+    return "";
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validate each field input before submitting
     const newErrors = {};
     SIGNUP_FORM_FIELDS.forEach((field) => {
       newErrors[field.name] = validateField(field.name, formState[field.name]);
     });
 
-    // Update errors state with the latest validation results
     setErrors(newErrors);
 
-    // Check if there are no errors (i.e., form is valid)
     if (Object.values(newErrors).every((error) => !error)) {
-      // Perform form submission logic
-      // Store form data in local storage
-      //localStorage.setItem(formState.Username, JSON.stringify(formState));
-      //console.log("Form submitted with state:", formState);
       createUserWithEmailAndPassword(
         auth,
         formState["Username"],
@@ -189,7 +186,6 @@ export default function SignUp({ onUpdateIsRegistered }) {
             userType: formState["UserType"],
           };
           setDoc(usersRef, userData);
-          // Set signUpSuccess to true
           setSignUpSuccess(true);
           setShowSuccessMessage(true);
         })
@@ -198,29 +194,56 @@ export default function SignUp({ onUpdateIsRegistered }) {
           const errorMessage = error.message;
           console.log("Error Code: " + errorCode);
           console.log("Error Message: " + errorMessage);
-          // Set signUpSuccess to true
           setSignUpSuccess(false);
           setShowSuccessMessage(false);
         });
 
-      // Hide the success message after 5 seconds
       setTimeout(() => {
         setShowSuccessMessage(false);
-      }, 2000); // 2000 milliseconds (adjust as needed)
+      }, 2000);
     } else {
-      // There are validation errors, handle them accordingly
       console.log("Form has validation errors.");
     }
-
-    console.log(formState);
   };
 
   const formFields = SIGNUP_FORM_FIELDS.map((field) => (
-    <div className="form-container">
-      <label className="col-4 card-text" for={field.name}>
+    <div
+      className="form-container"
+      key={field.id}
+      style={{ display: "flex", alignItems: "center", marginBottom: "1px" }}
+    >
+      <label
+        htmlFor={field.name}
+        style={{
+          flex: "0 0 auto",
+          width: "150px", // Set a fixed width for the labels
+          marginRight: "10px",
+        }}
+      >
         {field.title}:
       </label>
-      {field.type === "radio" ? (
+      {field.type === "select" ? (
+        <Select
+          labelId={`${field.name}-label`}
+          id={field.name}
+          value={formState[field.name]}
+          onChange={(e) => updateField(field.name, e.target.value)}
+          label={field.title}
+          fullWidth
+          required={field.required}
+          sx={{
+            backgroundColor: "#ffffff", // Set background color
+            color: theme.palette.secondary.contrastText,
+            margin: "0", // Use text color of the parent element
+          }}
+        >
+          {field.options.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </Select>
+      ) : field.type === "radio" ? (
         <div>
           {field.options.map((option) => (
             <div key={option.value}>
@@ -232,6 +255,7 @@ export default function SignUp({ onUpdateIsRegistered }) {
                 checked={formState[field.name] === option.value}
                 onChange={(e) => updateField(field.name, e.target.value)}
                 required={field.required}
+                style={{ margin: "0" }}
               />
               <label htmlFor={option.value}>{option.label}</label>
             </div>
@@ -244,6 +268,7 @@ export default function SignUp({ onUpdateIsRegistered }) {
           onChange={(e) => updateField(field.name, e.target.value)}
           type={field.type}
           required={field.required}
+          style={{ margin: "0" }}
         ></input>
       )}
       {errors[field.name] && (
@@ -252,17 +277,52 @@ export default function SignUp({ onUpdateIsRegistered }) {
     </div>
   ));
 
-  // Use useEffect to navigate to SignIn component after signUpSuccess is set to true
+  //   const formFields = (
+  //     <Box sx={{ maxHeight: "70vh", overflowY: "auto" }}>
+  //       {SIGNUP_FORM_FIELDS.map((field) => (
+  //         <div className="form-container" key={field.id}>
+  //           <label htmlFor={field.name}>{field.title}:</label>
+  //           {field.type === "radio" ? (
+  //             <div>
+  //               {field.options.map((option) => (
+  //                 <div key={option.value}>
+  //                   <input
+  //                     id={option.value}
+  //                     name={field.name}
+  //                     type="radio"
+  //                     value={option.value}
+  //                     checked={formState[field.name] === option.value}
+  //                     onChange={(e) => updateField(field.name, e.target.value)}
+  //                     required={field.required}
+  //                   />
+  //                   <label htmlFor={option.value}>{option.label}</label>
+  //                 </div>
+  //               ))}
+  //             </div>
+  //           ) : (
+  //             <input
+  //               className=""
+  //               value={formState[field.name]}
+  //               onChange={(e) => updateField(field.name, e.target.value)}
+  //               type={field.type}
+  //               required={field.required}
+  //             ></input>
+  //           )}
+  //           {errors[field.name] && (
+  //             <p style={{ color: "red" }}>{errors[field.name]}</p>
+  //           )}
+  //         </div>
+  //       ))}
+  //     </Box>
+  //   );
+
   useEffect(() => {
     if (signUpSuccess) {
-      // Simulate a redirect to the Sign In page after 5 seconds
       const redirectTimer = setTimeout(() => {
-        // Navigate to the SignIn component or route as needed
         console.log("Redirecting to SignIn page...");
         onUpdateIsRegistered(true);
-      }, 2000); // 2000 milliseconds (adjust as needed)
+      }, 2000);
 
-      // Clear the timer if the component is unmounted
       return () => clearTimeout(redirectTimer);
     }
   }, [signUpSuccess, onUpdateIsRegistered]);
@@ -272,35 +332,94 @@ export default function SignUp({ onUpdateIsRegistered }) {
   };
 
   return (
-    <div className="container">
-      <div className="auth-form">
-        <h2>Sign up</h2>
-        {showSuccessMessage && (
-          <div className="success-popup">
-            <p>
-              Sign up successful! You are being routed to the Sign In page...
-            </p>
-          </div>
-        )}
-        {!signUpSuccess && (
-          <form onSubmit={handleSubmit}>
-            {formFields}
-            <button
-              className="btn btn-primary sign-in-btn"
-              onClick={handleSubmit}
-            >
-              Sign Up
-            </button>
-            <hr></hr>
-            <div className="form-switch" style={{ fontSize: 20 }}>
-              Already have an account?{" "}
-              <button className="link-button" onClick={handleFormSwitchSignIn}>
-                Sign In here
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+    <ThemeProvider theme={darkTheme}>
+      <Box
+        style={{
+          backgroundSize: "cover",
+          height: "70vh",
+          //   minHeight: "500px",
+          backgroundColor: theme.palette.primary.dark,
+          color: theme.palette.primary.contrastText,
+          overflowX: "hidden", // Hide horizontal overflow
+          overflowY: "auto", // Enable vertical scrolling
+          paddingLeft: "2rem", // Adjust left padding as needed
+          paddingRight: "2rem",
+          padding: "2rem",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Container component="main" maxWidth="xs">
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              //   py: 3,
+              //   px: 2,
+              //   boxShadow: 1,
+              borderRadius: 1,
+            }}
+          >
+            <Avatar sx={{ m: 1, bgcolor: "#ffffff" }}>
+              <LockOutlinedIcon />
+            </Avatar>
+            <Typography component="h1" variant="h5">
+              Sign up
+            </Typography>
+            {showSuccessMessage && (
+              <div className="success-popup">
+                <p>
+                  Sign up successful! You are being routed to the Sign In
+                  page...
+                </p>
+              </div>
+            )}
+            {!signUpSuccess && (
+              <ThemeProvider theme={theme}>
+                <form onSubmit={handleSubmit}>
+                  <Stack spacing={2}>
+                    {formFields}
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      size="large"
+                      sx={{
+                        mt: "10px",
+                        mr: "20px",
+                        borderRadius: 28,
+                        color: "#ffffff",
+                        minWidth: "170px",
+                        backgroundColor: "#FF9A01",
+                      }}
+                    >
+                      Sign Up
+                    </Button>
+                    <Grid container justifyContent="space-around">
+                      <Grid item xs={12} sx={{ ml: "3em", mr: "3em" }}>
+                        <Typography
+                          variant="body1"
+                          component="span"
+                          sx={{ marginTop: "10px" }}
+                        >
+                          Already have an account?{" "}
+                          <span
+                            style={{ color: "#beb4fb", cursor: "pointer" }}
+                            onClick={handleFormSwitchSignIn}
+                          >
+                            Sign in
+                          </span>
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Stack>
+                </form>
+              </ThemeProvider>
+            )}
+          </Box>
+        </Container>
+      </Box>
+    </ThemeProvider>
   );
 }
