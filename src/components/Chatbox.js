@@ -78,13 +78,29 @@ export default class Chatbox extends Component {
     return response.data.user_intent;
   }
 
+  handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // Prevent default form submission behavior
+      this.handleSendMessage();
+    }
+  }
+
+  renderMessages = () => {
+    return this.state.messages.map((message, index) => (
+      <div key={index} className={`${message.user}`}>
+        <div className={`${message.user}-bubble`}>{message.user}</div>
+        {/* <div className={`${message.user}-text-bubble`}>{message.user}</div> */}
+        <div className="message-text">{message.text}</div>
+      </div>
+    ));
+  }
+
   handleSendMessage = async () => {
     const { userInput, messages, stop, timeSlots } = this.state;
     if(userInput !== ""){
       this.props.showWelcomeText(false);
     }
     if (userInput.trim() === "") return; // Prevent sending empty messages
-
 
     // Add the user's message to the list
     let updateMessages = [...messages, { text: userInput, user: "user" }];
@@ -168,41 +184,26 @@ export default class Chatbox extends Component {
           ];
         }
         this.setState({ messages: updateMessages });
+    });
     }
-  };
-
-  handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault(); // Prevent default form submission behavior
-      this.handleSendMessage();
-    }
-  };
-
-  renderMessages() {
-    return this.state.messages.map((message, index) => (
-      <div key={index} className={`${message.user}`}>
-        <div className={`${message.user}-bubble`}>{message.user}</div>
-        {/* <div className={`${message.user}-text-bubble`}>{message.user}</div> */}
-        <div className="message-text">{message.text}</div>
-      </div>
-    ));
   }
-
   render() {
     return (
-      <div className="chat-container">
-        <div className="chat-input">
-          <input
-            type="text"
-            placeholder="Type a message..."
-            value={this.state.userInput}
-            onChange={this.handleInputChange}
-            onKeyDown={this.handleKeyDown}
-          />
-          <button onClick={this.handleSendMessage}>Send</button>
-        </div>
-        <div className="chat-messages">{this.renderMessages()}</div>
-      </div>
-    );
-  }
+     <div className="chat-container">
+       <div className="chat-input">
+         <input
+           type="text"
+           placeholder="Type a message..."
+           value={this.state.userInput}
+           onChange={this.handleInputChange}
+           onKeyDown={this.handleKeyDown}
+         />
+         <button onClick={this.handleSendMessage}>Send</button>
+       </div>
+       <div className="chat-messages">{this.renderMessages()}</div>
+     </div>
+   );
+ }
+
+  
 }
