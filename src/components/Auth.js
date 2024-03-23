@@ -17,7 +17,7 @@ import SignUp from "./SignUp";
 
 const Auth = () => {
   const bgstyle = {
-    backgroundImage: `url(${bgimg})`,
+    // backgroundImage: `url(${bgimg})`,
     backgroundSize: "cover",
     height: "100vh",
     color: "#f5f5f5",
