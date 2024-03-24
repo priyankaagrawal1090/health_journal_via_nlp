@@ -34,7 +34,8 @@ export default class Chatbox extends Component {
       selectedDoctorName: "",
       selectedSlotId: "",
       userInput: "",
-      stop: false,
+      isBookingAppointment: false,
+      isCancelAppointment: false,
     };
   }
 
@@ -44,9 +45,34 @@ export default class Chatbox extends Component {
     });
   };
 
+  resetState = () => {
+    this.setState({
+      enabledDates: [], 
+      timeSlots: [], 
+      filteredTimeSlots: [], 
+      doctorsForSelectedDate: [], 
+      selectedDate: "", 
+      selectedDoctorID: "",
+      selectedDoctorName: "",
+      selectedSlotId: "",
+    });
+  }
+
   fetchTimeSlots = async (slotDate) => {
     const slots = [];
     const slotQuery = query(collection(db, "Time Slots"), where("slotDate", "==", slotDate));
+    const slotQuerySnap = await getDocs(slotQuery);
+    slotQuerySnap.forEach((doc) => {
+      let data = doc.data();
+      data.slotId = doc.id;
+      slots.push(data);
+    });
+    return slots;
+  }
+
+  fetchBookedTimeSlots = async (slotDate) => {
+    const slots = [];
+    const slotQuery = query(collection(db, "Booked Time Slots"), where("slotDate", "==", slotDate));
     const slotQuerySnap = await getDocs(slotQuery);
     slotQuerySnap.forEach((doc) => {
       let data = doc.data();
@@ -69,19 +95,18 @@ export default class Chatbox extends Component {
     return slotDates;
   }
 
-  // fetchDoctorsByDate = async (slotDate) => {
-  //   const doctors = [];
-  //   const slotQuery = query(collection(db, "Time Slots"), where("slotDate", "==", slotDate));
-  //   const slotQuerySnap = await getDocs(slotQuery);
-  //   slotQuerySnap.forEach(async (doc) => {
-  //     let data = doc.data();
-  //     let doctorInfo = await this.fetchDoctorById(data.doctorId);
-  //     if(!doctors.some(doctor => doctor.firstName === doctorInfo.firstName)) {
-  //       doctors.push(data)
-  //     }
-  //   });
-  //   return doctors;
-  // }
+  fetchBookedDates = async (userId) => {
+    const slotDates = [];
+    const slotDateQuery = query(collection(db, "Booked Time Slots"), where("userId", "==", userId));
+    const slotDateQuerySnap = await getDocs(slotDateQuery);
+    slotDateQuerySnap.forEach((doc) => {
+      let data = doc.data();
+      if (!slotDates.includes(data.slotDate)) {
+        slotDates.push(data.slotDate);
+      }
+    });
+    return slotDates;
+  }
 
   fetchSlotsByDoctorID = (doctorID) => {
     const filteredSlots = [];
@@ -139,7 +164,7 @@ export default class Chatbox extends Component {
   }
 
   handleSendMessage = async () => {
-    const { userInput, messages, stop, timeSlots } = this.state;
+    const { userInput, messages, isBookingAppointment, isCancelAppointment, timeSlots } = this.state;
 
     if (userInput.trim() === "") return; // Prevent sending empty messages
 
@@ -147,80 +172,62 @@ export default class Chatbox extends Component {
     let updateMessages = [...messages, { text: userInput, user: "user" }];
 
     this.setState({ messages: updateMessages, userInput: "" });
-    if (stop) {
-      // if (isNaN(userInput) == true) {
-      //   let parsedDate = userInput.split("/");
-      //   let firebaseDateFormat = parsedDate[2] + "-" + parsedDate[0] + "-" + parsedDate[1];
-      //   let availableTimeSlots = await this.fetchTimeSlots(firebaseDateFormat);
-      //   this.setState({ timeSlots: availableTimeSlots });
-      //   for (let i = 0; i < availableTimeSlots.length; i++) {
-      //     if (i < 9) {
-      //       let doctorInfo = await this.fetchDoctorById(availableTimeSlots[i].doctorId);
-      //       let timeSlotStr = i + " - Start Time: " + availableTimeSlots[i].startTime + ", End Time: " + availableTimeSlots[i].endTime +
-      //         ", Doctor Name: " + doctorInfo.firstName + " " + doctorInfo.lastName + ", Doctor Gender: " + doctorInfo.gender;
-      //       updateMessages.push({ text: timeSlotStr, user: "bot" });
-      //     } else {
-      //       break;
-      //     }
-      //   }
-      //   updateMessages.push({ text: "Type in the number of the time slot you would like!", user: "bot" });
-      //   this.setState({ messages: updateMessages });
-      // } else {
-      //   // add patient id to slot
-      //   let index = parseInt(userInput);
-      //   let selectedSlot = timeSlots[index];
-      //   let userId = this.props.userId
-      //   selectedSlot.patientId = userId;
-      //   // add updated slot to "booked time slots"
-      //   await setDoc(doc(db, "Booked Time Slots", selectedSlot.slotId), selectedSlot)
-      //   // remove slot from "time slots" collection
-      //   await deleteDoc(doc(db, "Time Slots", selectedSlot.slotId));
-      //   this.setState({ stop: false });
-      // }
-    } else {
-      const userQuestion = new FormData();
-      userQuestion.append('prompt', userInput);
-      let userIntent = await this.fetchUserIntent(userQuestion);
-      if (userIntent === "chat" || userIntent === "question") {
-        let chatResponse = await this.fetchChatResponse(userQuestion);
-        updateMessages = [
-          ...this.state.messages,
-          { text: chatResponse, user: "bot" },
-        ];
-      } else if (userIntent === "search for resources") {
-        let urls = await this.fetchResources(userInput);
-        updateMessages = [
-          ...this.state.messages,
-          { text: urls, user: "bot" },
-        ];
-      } else if (userIntent === "view appointments") {
 
-        let patientAppointments = await this.fetchUserAppointments(this.props.userId);
-        let patientApptInfo = [{ text: `You currently have ${patientAppointments.length} upcoming appointments`, user: "bot" }];
-        for (let i = 0; i < patientAppointments.length; i++) {
-          let doctorInfo = await this.fetchDoctorById(patientAppointments[i].doctorId);
-          patientAppointments[i].doctorEmail = doctorInfo.email;
-          patientAppointments[i].doctorFName = doctorInfo.firstName;
-          patientAppointments[i].doctorLName = doctorInfo.lastName;
-          let apptInfoStr = "You have an appointment with Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName + " on " + patientAppointments[i].slotDate +
-            " from " + patientAppointments[i].startTime + " to " + patientAppointments[i].endTime;
-          patientApptInfo.push({ text: apptInfoStr, user: "bot" });
-        }
-        updateMessages = [
-          ...this.state.messages,
-          ...patientApptInfo,
-        ];
-      } else {
-        let enabledDates = await this.fetchAvailableDates();
-        this.setState({ stop: true });
-        this.setState({ enabledDates: enabledDates });
-        updateMessages = [
-          ...this.state.messages,
-          { text: "I would be glad to assist you in booking an appointment! What date would you like to book for?", user: "bot" },
-        ];
-      }
-      this.setState({ messages: updateMessages });
+    const userQuestion = new FormData();
+    userQuestion.append('prompt', userInput);
+    let userIntent = await this.fetchUserIntent(userQuestion);
+    if(isBookingAppointment || isCancelAppointment) {
+      this.resetState();
+      this.setState({isBookingAppointment: false});
+      this.setState({isCancelAppointment: false});
     }
+    if (userIntent === "chat" || userIntent === "question") {
+      let chatResponse = await this.fetchChatResponse(userQuestion);
+      updateMessages = [
+        ...this.state.messages,
+        { text: chatResponse, user: "bot" },
+      ];
+    } else if (userIntent === "search for resources") {
+      let urls = await this.fetchResources(userInput);
+      updateMessages = [
+        ...this.state.messages,
+        { text: urls, user: "bot" },
+      ];
+    } else if (userIntent === "view appointments") {
+
+      let patientAppointments = await this.fetchUserAppointments(this.props.userId);
+      let patientApptInfo = [{ text: `You currently have ${patientAppointments.length} upcoming appointments`, user: "bot" }];
+      for (let i = 0; i < patientAppointments.length; i++) {
+        let doctorInfo = await this.fetchDoctorById(patientAppointments[i].doctorId);
+        patientAppointments[i].doctorEmail = doctorInfo.email;
+        patientAppointments[i].doctorFName = doctorInfo.firstName;
+        patientAppointments[i].doctorLName = doctorInfo.lastName;
+        let apptInfoStr = "You have an appointment with Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName + " on " + patientAppointments[i].slotDate +
+          " from " + patientAppointments[i].startTime + " to " + patientAppointments[i].endTime;
+        patientApptInfo.push({ text: apptInfoStr, user: "bot" });
+      }
+      updateMessages = [
+        ...this.state.messages,
+        ...patientApptInfo,
+      ];
+    } else if (userIntent == "cancel appointment") {
+      let enabledDates = await this.fetchBookedDates(this.props.userId);
+      this.setState({ isCancelAppointment: true });
+      this.setState({ enabledDates: enabledDates });
+      updateMessages = [
+        ...this.state.messages,
+        { text: "I would be glad to assist you in cancelling an appointment!", user: "bot" },
+      ];
+    } else {
+      let enabledDates = await this.fetchAvailableDates();
+      this.setState({ isBookingAppointment: true });
+      this.setState({ enabledDates: enabledDates });
+      updateMessages = [
+        ...this.state.messages,
+        { text: "I would be glad to assist you in booking an appointment! What date would you like to book for?", user: "bot" },
+      ];
+    }
+    this.setState({ messages: updateMessages });
   };
 
   handleKeyDown = (e) => {
@@ -238,6 +245,47 @@ export default class Chatbox extends Component {
         <div className="message-text">{message.text}</div>
       </div>
     ));
+  }
+  renderAppointmentCancel() {
+    return (
+      <div>
+        <DatePicker selected={this.state.selectedDate} onChange={async date => {
+          this.setState({ selectedDate: date });
+          let bookedSlots = await this.fetchBookedTimeSlots(moment(date).format('YYYY-MM-DD'));
+          this.setState({ timeSlots: bookedSlots });
+        }}
+          filterDate={(d) => this.state.enabledDates.includes(moment(d).format('YYYY-MM-DD'))}
+        />
+        <br />
+        <br />
+        {this.state.timeSlots.length != 0 &&
+          <select value={this.state.selectedSlotId} onChange={(e) => {
+            this.setState({ selectedSlotId: e.target.value });
+          }}>
+            <option value="" selected disabled hidden>Choose here</option>
+            {this.state.timeSlots.map(slot => <option value={slot.slotId}>{"Appointment Time " + slot.startTime + "-" + slot.endTime}</option>)}
+          </select>
+        }
+        <br />
+        <br />
+        {this.state.selectedSlotId !== "" &&
+          <button onClick={async () => {
+            let selectedSlot = this.state.timeSlots.filter(slot => {
+              return slot.slotId === this.state.selectedSlotId;
+            });
+            delete selectedSlot[0]['userId'];
+            await setDoc(doc(db, "Time Slots", this.state.selectedSlotId), selectedSlot[0])
+            await deleteDoc(doc(db, "Booked Time Slots", this.state.selectedSlotId));
+            this.setState({ isCancelAppointment: false });
+            let updateMessages = [
+              ...this.state.messages,
+              { text: "Thank you for allowing us to help you cancel your appointment! Have a great day!", user: "bot" },
+            ];
+            this.setState({ messages: updateMessages, userInput: "" });
+            this.resetState();
+          }}>Cancel Appointment</button>
+        }
+      </div>);
   }
 
   renderAppointmentBooking() {
@@ -296,13 +344,14 @@ export default class Chatbox extends Component {
             await setDoc(doc(db, "Booked Time Slots", this.state.selectedSlotId), selectedSlot[0])
             // remove slot from "time slots" collection
             await deleteDoc(doc(db, "Time Slots", this.state.selectedSlotId));
-            this.setState({ stop: false });
+            this.setState({ isBookingAppointment: false });
 
             let updateMessages = [
               ...this.state.messages,
               { text: `Thank you for booking an appointment! You are all set for your appointment on ${this.state.selectedDate} with ${"Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName}`, user: "bot" },
             ];
             this.setState({ messages: updateMessages, userInput: "" });
+            this.resetState();
           }}>Book Appointment</button>
         }
       </div>
@@ -325,7 +374,8 @@ export default class Chatbox extends Component {
 
         <div className="chat-messages">
           {this.renderMessages()}
-          {this.state.stop && this.renderAppointmentBooking()}
+          {this.state.isCancelAppointment && this.renderAppointmentCancel()}
+          {this.state.isBookingAppointment && this.renderAppointmentBooking()}
         </div>
 
       </div>

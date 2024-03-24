@@ -18,7 +18,7 @@ export default function PendingAppointmentCard (props) {
                 </Typography>
             </CardContent>
             <CardActions>
-                <Button size='small'>Decline</Button>
+                <Button size='small' onClick={props.onButtonClick}>{props.buttonLabel}</Button>
             </CardActions>
         </Card>
   )

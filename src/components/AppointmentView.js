@@ -2,9 +2,8 @@ import React, { useState, Component, useEffect } from 'react';
 import '../App.css'
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, doc, getDocs, getDoc, query, where } from 'firebase/firestore';
+import { getFirestore, collection, doc, getDocs, getDoc, deleteDoc, query, where } from 'firebase/firestore';
 import PendingAppointmentCard from './PendingAppointmentCard';
-import AppointmentCard from './AppointmentCard';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDvXnjcl4fyhzIXxhN-NSJFom3DLonoih0",
@@ -32,6 +31,19 @@ const fetchUserData = async () => {
     }
 }
 
+const fetchOpenSlots = async () => {
+    const openSlots = [];
+    const user = getAuth().currentUser;
+    if (user) {
+        const slotQuery = query(collection(db, "Time Slots"), where("doctorId", "==", user.uid));
+        const slotQuerySnap = await getDocs(slotQuery);
+        slotQuerySnap.forEach((doc) => {
+            openSlots.push({id: doc.id, ...doc.data()});
+        });
+    }
+    return openSlots;
+}
+
 const fetchBookedSlots = async () => {
     const bookedSlots = [];
     const user = getAuth().currentUser;
@@ -39,13 +51,23 @@ const fetchBookedSlots = async () => {
         const slotQuery = query(collection(db, "Booked Time Slots"), where("doctorId", "==", user.uid));
         const slotQuerySnap = await getDocs(slotQuery);
         slotQuerySnap.forEach((doc) => {
-            bookedSlots.push(doc.data());
+            bookedSlots.push({id: doc.id, ...doc.data()});
         });
     }
     return bookedSlots;
 }
+
+const cancelBookedSlot = async (slotId) => {
+    await deleteDoc(doc(db, "Booked Time Slots", slotId));
+}
+
+const deleteOpenSlot = async (slotId) => {
+    await deleteDoc(doc(db, "Time Slots", slotId));
+}
+
 export default function AppointmentView() {
     const [userData, setUserData] = useState({});
+    const [openSlotData, setOpenSlotData] = useState([]);
     const [bookedSlotData, setBookedSlotData] = useState([]);
     useEffect(() => {
         async function fetchUser() {
@@ -62,21 +84,45 @@ export default function AppointmentView() {
         }
         fetchBookedSlotsData();
     }, []);
+
+    useEffect(() => {
+        async function fetchOpenSlotsData() {
+            let data = await fetchOpenSlots();
+            setOpenSlotData(data);
+        }
+        fetchOpenSlotsData();
+    }, []);
+    const hasBookedSlots = bookedSlotData.length != 0;
+    const hasOpenSlots = openSlotData.length != 0;
     return (
         <div className="appointment-view-container">
             <div className='pending-appointment-view-container'>
                 <h2>Booked Slots</h2>
+                {!hasBookedSlots && <h3>No slots booked currently</h3>}
                 {bookedSlotData.map((slot) => (
                 <div className='pending-appointment-card-container'>
-                    <PendingAppointmentCard name={userData.firstName} date={slot.slotDate} description={slot.startTime} />
+                    <PendingAppointmentCard name={userData.firstName} date={slot.slotDate} description={slot.startTime} buttonLabel="Cancel" onButtonClick={async () => {
+                        cancelBookedSlot(slot.id);
+                        let updatedData = await fetchBookedSlots();
+                        setBookedSlotData(updatedData);
+                    }} />
+                    <br/>
                 </div>
                 ))}
             </div>
             <div className='upcoming-appointment-view-container'>
                 <h2>Open Slots</h2>
-                <div className='upcoming-appointment-card-container'>
-                    <PendingAppointmentCard name='John' date='2:00PM' description='Im having some trouble' />
+                {!hasOpenSlots && <h3>No open slots currently</h3>}
+                {openSlotData.map((slot) => (
+                <div className='pending-appointment-card-container'>
+                    <PendingAppointmentCard name={userData.firstName} date={slot.slotDate} description={slot.startTime} buttonLabel="Delete" onButtonClick={async () => {
+                        deleteOpenSlot(slot.id);
+                        let updatedData = await fetchOpenSlots();
+                        setOpenSlotData(updatedData);
+                    }} />
+                    <br/>
                 </div>
+                ))}
             </div>
         </div>
     )
