@@ -1,42 +1,26 @@
 import * as React from "react";
 import Topnav from "./Topnav";
 import Container from "@mui/material/Container";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card"
+// import Card from "@mui/material/Card";
+// import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import { Grid } from "@mui/material";
-import { Box } from "@mui/material";
-import { Stack } from "@mui/material";
 import bgimg from "./../backimg.jpg";
-import "../App.css";
+// import "../App.css";
 
 export default function About() {
   return (
-    <>
+    <div>
       <Topnav></Topnav>
       <Container maxWidth="xl" spacing={4} style={{ height: "50vh" }}>
         <Grid xs={12} container spacing={4}>
-          <Grid
-            item
-            xs={12}
-            sm={6}
-            style={{
-              justifyContent: "center",
-              alignItems: "center",
-              textAlign: "center",
-              heigth: "50vh",
-            }}
-          >
-            <Grid container direction="column" spacing={2}>
-              <Grid item style={{ backgroundImage: `url(${bgimg})`,}}>
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid item xs={12} sm={6} style={{ 
-              justifyContent: "center",
-              alignItems: "center",
-              textAlign: "left",
-              heigth: "50vh",
+          <Grid item xs={12} sm={6} style={{
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "left",
+            height: "50vh",
+            marginTop: "50px",
           }}>
             <Grid container direction="column" spacing={2}>
               <Grid item>
@@ -49,7 +33,7 @@ export default function About() {
           </Grid>
         </Grid>
       </Container>
-      <Container maxWidth='none' style={{ backgroundColor: "#f9f9f9f9", height: "50vh"}} spacing={4}>
+      <Container maxWidth='none' style={{ backgroundColor: "#f9f9f9f9", height: "50vh" }} spacing={4}>
         <Grid
           container
           spacing={4}
@@ -70,6 +54,20 @@ export default function About() {
             }}
           >
             <Card>
+              <CardHeader>
+                <CardTitle>Personalized Treatment Search</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid w-full items-center gap-4">
+                  <div className="flex flex-col space-y-1.5">
+                    Say goodbye to endless online searches. Our intuitive chatbot
+                    is here to assist you 24/7. Simply ask about the resources,
+                    and receive accurate and relevant information instantly.
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            {/* <Card>
               <CardContent>
                 <Typography variant="h4" gutterBottom>
                   Personalized Treatment Search
@@ -80,10 +78,25 @@ export default function About() {
                   and receive accurate and relevant information instantly.
                 </Typography>
               </CardContent>
-            </Card>
+            </Card> */}
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <Card>
+              <CardHeader>
+                <CardTitle>Seamless Appointment Booking</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid w-full items-center gap-4">
+                  <div className="flex flex-col space-y-1.5">
+                    Booking appointments has never been easier. By simply chatting
+                    with our virtual assitant, patients can schedule appointments with their
+                    preferred doctors, eliminating the hassle of phone calls and
+                    waiting times.
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            {/* <Card>
               <CardContent>
                 <Typography variant="h4" gutterBottom>
                   Seamless Appointment Booking
@@ -95,10 +108,24 @@ export default function About() {
                   waiting times.
                 </Typography>
               </CardContent>
-            </Card>
+            </Card> */}
           </Grid>
           <Grid item xs={12} sm={6} md={4} lg={3}>
             <Card>
+              <CardHeader>
+                <CardTitle>Efficient Doctor Portal</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid w-full items-center gap-4">
+                  <div className="flex flex-col space-y-1.5">
+                    Doctors have full control over their schedules with our
+                    user-friendly portal. They can manage pending and upcoming
+                    appointments, and update their availability in real-time.
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            {/* <Card>
               <CardContent>
                 <Typography variant="h4" gutterBottom>
                   Efficient Doctor Portal
@@ -110,10 +137,10 @@ export default function About() {
                   availability in real-time.
                 </Typography>
               </CardContent>
-            </Card>
+            </Card> */}
           </Grid>
         </Grid>
       </Container>
-    </>
+    </div>
   );
 }

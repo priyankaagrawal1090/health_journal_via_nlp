@@ -433,7 +433,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import Checkbox from "@mui/material/Checkbox";
 import Button from "@mui/material/Button";
-import theme from "./../theme";
+// import theme from "./../theme";
 import "../App.css";
 
 const SIGNIN_FORM_FIELDS = [
@@ -622,8 +622,8 @@ export default function SignIn({ onUpdateIsRegistered }) {
           backgroundSize: "cover",
           height: "70vh",
           minHeight: "500px",
-          backgroundColor: theme.palette.primary.dark,
-          color: theme.palette.primary.contrastText,
+          backgroundColor: "#f5f5f5",
+          color: "#f5f5f5",
         }}
       >
         <ThemeProvider theme={createTheme({ palette: { mode: "dark" } })}>

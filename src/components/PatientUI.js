@@ -1,8 +1,8 @@
 import React, { useState, Component, useEffect } from 'react';
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDoc, collection } from 'firebase/firestore';
-import { Sidebar } from "./Navbar";
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { PatientSidebar } from "./Navbar";
 import Chatbox from "./Chatbox"
 import '../App.css'
 
@@ -44,12 +44,8 @@ export default function PatientUI() {
     console.log("USER DATA:", userData);
     return (
       <div className="div-patientUI">
-        <div className="div-sidebar">
-          <Sidebar />
-        </div>
-        <div className="div-chatbox">
-          <Chatbox userId={userData.uid} />
-        </div>
+        <PatientSidebar userEmail={userData.email} />
+        <Chatbox userId={userData.uid} />
       </div>
     );
   } else {

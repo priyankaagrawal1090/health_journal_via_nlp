@@ -4,8 +4,14 @@ import "../App.css";
 import moment from "moment";
 import { initializeApp } from 'firebase/app'
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where } from 'firebase/firestore';
+import Typewriter from "typewriter-effect";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { Input } from "./input";
+import { Button } from "./button";
+import { Alert, AlertDescription, AlertTitle } from "./alert"
+import { Send, BotMessageSquare } from "lucide-react";
+import { ScrollArea } from "./scroll-area";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDvXnjcl4fyhzIXxhN-NSJFom3DLonoih0",
@@ -47,11 +53,11 @@ export default class Chatbox extends Component {
 
   resetState = () => {
     this.setState({
-      enabledDates: [], 
-      timeSlots: [], 
-      filteredTimeSlots: [], 
-      doctorsForSelectedDate: [], 
-      selectedDate: "", 
+      enabledDates: [],
+      timeSlots: [],
+      filteredTimeSlots: [],
+      doctorsForSelectedDate: [],
+      selectedDate: "",
       selectedDoctorID: "",
       selectedDoctorName: "",
       selectedSlotId: "",
@@ -128,7 +134,7 @@ export default class Chatbox extends Component {
   }
 
   fetchResources = async (userInput) => {
-    let response = await axios.post('http://192.168.1.10:5000/process_query', { query: userInput });
+    let response = await axios.post('http://192.168.1.5:5000/process_query', { query: userInput });
     let top_5_links = response.data.links.slice(0, 5);
     let top5linkstr = "";
     for (let i = 0; i < top_5_links.length; i++) {
@@ -152,12 +158,12 @@ export default class Chatbox extends Component {
   }
 
   fetchChatResponse = async (userQuestion) => {
-    let response = await axios.post('http://192.168.1.10:5000/chatresponse', userQuestion);
+    let response = await axios.post('http://192.168.1.5:5000/chatresponse', userQuestion);
     return response.data.chat_response;
   }
 
   fetchUserIntent = async (userQuestion) => {
-    let response = await axios.post('http://192.168.1.10:5000/userintent', userQuestion);
+    let response = await axios.post('http://192.168.1.5:5000/userintent', userQuestion);
     let labels = response.data.user_intent;
     labels.sort((a, b) => b.score - a.score);
     return labels[0].label;
@@ -176,10 +182,10 @@ export default class Chatbox extends Component {
     const userQuestion = new FormData();
     userQuestion.append('prompt', userInput);
     let userIntent = await this.fetchUserIntent(userQuestion);
-    if(isBookingAppointment || isCancelAppointment) {
+    if (isBookingAppointment || isCancelAppointment) {
       this.resetState();
-      this.setState({isBookingAppointment: false});
-      this.setState({isCancelAppointment: false});
+      this.setState({ isBookingAppointment: false });
+      this.setState({ isCancelAppointment: false });
     }
     if (userIntent === "chat" || userIntent === "question") {
       let chatResponse = await this.fetchChatResponse(userQuestion);
@@ -239,10 +245,19 @@ export default class Chatbox extends Component {
 
   renderMessages() {
     return this.state.messages.map((message, index) => (
-      <div key={index} className={`${message.user}`}>
-        <div className={`${message.user}-bubble`}>{message.user}</div>
-        {/* <div className={`${message.user}-text-bubble`}>{message.user}</div> */}
-        <div className="message-text">{message.text}</div>
+      <div className={"flex " + (message.user == "bot" ? "justify-start" : "justify-end")}>
+        <Alert key={index} className="w-2/4 mt-5">
+          <BotMessageSquare className="h-4 w-4" />
+          <AlertTitle>{message.user}</AlertTitle>
+          <AlertDescription>
+            {message.user == "bot" ?
+              <Typewriter options={{ delay: 30, cursor: "", }} onInit={(typewriter) => {
+                typewriter
+                .typeString(message.text)
+                .start();
+              }} /> : message.text}
+          </AlertDescription>
+        </Alert>
       </div>
     ));
   }
@@ -360,25 +375,21 @@ export default class Chatbox extends Component {
 
   render() {
     return (
-      <div className="chat-container">
-        <div className="chat-input">
-          <input
-            type="text"
-            placeholder="Type a message..."
-            value={this.state.userInput}
-            onChange={this.handleInputChange}
-            onKeyDown={this.handleKeyDown}
-          />
-          <button onClick={this.handleSendMessage}>Send</button>
+      <div className="chat-container ml-64 h-screen">
+        <div className="chat-messages flex justify-center h-3/4">
+          <ScrollArea className="mt-10 h-4/5 w-4/5">
+            {this.renderMessages()}
+            {this.state.isCancelAppointment && this.renderAppointmentCancel()}
+            {this.state.isBookingAppointment && this.renderAppointmentBooking()}
+          </ScrollArea>
         </div>
-
-        <div className="chat-messages">
-          {this.renderMessages()}
-          {this.state.isCancelAppointment && this.renderAppointmentCancel()}
-          {this.state.isBookingAppointment && this.renderAppointmentBooking()}
-        </div>
-
-      </div>
+        <center>
+          <div className="chat-input flex justify-center bottom-0">
+            <Input className="w-80 mt-40" type="text" placeholder="Type a message..." value={this.state.userInput} onChange={this.handleInputChange} onKeyDown={this.handleKeyDown}></Input>
+            <Button className="ml-2 mt-40" onClick={this.handleSendMessage}><Send className="h-4 w-4" /></Button>
+          </div>
+        </center>
+      </div >
     );
   }
 }

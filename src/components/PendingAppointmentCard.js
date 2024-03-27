@@ -1,6 +1,6 @@
 import React, { useState, Component } from 'react';
 import {Box, Card, CardActions, CardContent, Typography, Button} from '@mui/material';
-import '../App.css'
+// import '../App.css'
 
 export default function PendingAppointmentCard (props) {
 
