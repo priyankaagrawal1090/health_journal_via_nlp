@@ -1,5 +1,6 @@
 import React, { Component, useEffect } from "react";
 import axios from 'axios';
+import { io } from 'socket.io-client'
 import "../App.css";
 import moment from "moment";
 import { initializeApp } from 'firebase/app'
@@ -10,7 +11,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Input } from "./input";
 import { Button } from "./button";
 import { Alert, AlertDescription, AlertTitle } from "./alert"
-import { Send, BotMessageSquare } from "lucide-react";
+import { Send, BotMessageSquare, CheckCheck } from "lucide-react";
 import { ScrollArea } from "./scroll-area";
 
 const firebaseConfig = {
@@ -23,6 +24,7 @@ const firebaseConfig = {
   measurementId: "G-7V9YPQPLEP"
 };
 
+const socket = io('http://localhost:4000');
 const app = initializeApp(firebaseConfig);
 const db = getFirestore();
 
@@ -134,7 +136,7 @@ export default class Chatbox extends Component {
   }
 
   fetchResources = async (userInput) => {
-    let response = await axios.post('http://192.168.1.5:5000/process_query', { query: userInput });
+    let response = await axios.post('http://192.168.68.108:5000/process_query', { query: userInput });
     let top_5_links = response.data.links.slice(0, 5);
     let top5linkstr = "";
     for (let i = 0; i < top_5_links.length; i++) {
@@ -157,13 +159,24 @@ export default class Chatbox extends Component {
     return patientAppointments;
   }
 
+  fetchChatbotMessage = async (message) => {
+    const chatbotMessages = [];
+    const chatbotMessageQuery = query(collection(db, "chatbot messages"), where("message", "==", message));
+    const chatbotMessageQuerySnap = await getDocs(chatbotMessageQuery);
+    chatbotMessageQuerySnap.forEach((doc) => {
+      let data = doc.data();
+      chatbotMessages.push(data);
+    });
+    return chatbotMessages;
+  }
+
   fetchChatResponse = async (userQuestion) => {
-    let response = await axios.post('http://192.168.1.5:5000/chatresponse', userQuestion);
+    let response = await axios.post('http://192.168.68.108:5000/chatresponse', userQuestion);
     return response.data.chat_response;
   }
 
   fetchUserIntent = async (userQuestion) => {
-    let response = await axios.post('http://192.168.1.5:5000/userintent', userQuestion);
+    let response = await axios.post('http://192.168.68.108:5000/userintent', userQuestion);
     let labels = response.data.user_intent;
     labels.sort((a, b) => b.score - a.score);
     return labels[0].label;
@@ -175,7 +188,7 @@ export default class Chatbox extends Component {
     if (userInput.trim() === "") return; // Prevent sending empty messages
 
     // Add the user's message to the list
-    let updateMessages = [...messages, { text: userInput, user: "user" }];
+    let updateMessages = [...messages, { text: userInput, user: "You" }];
 
     this.setState({ messages: updateMessages, userInput: "" });
 
@@ -189,10 +202,17 @@ export default class Chatbox extends Component {
     }
     if (userIntent === "chat" || userIntent === "question") {
       let chatResponse = await this.fetchChatResponse(userQuestion);
-      updateMessages = [
-        ...this.state.messages,
-        { text: chatResponse, user: "bot" },
-      ];
+      socket.emit('send_message', { message: chatResponse.replace(/\n/g, '') }, async (response) => {
+        if (response.status == "success") {
+          let chatbotMessages = await this.fetchChatbotMessage(chatResponse.replace(/\n/g, ''));
+          let chatbotMessage = chatbotMessages[0];
+          updateMessages = [
+            ...this.state.messages,
+            { text: chatResponse, user: "bot", verified: chatbotMessage.verified },
+          ];
+          this.setState({ messages: updateMessages });
+        }
+      });
     } else if (userIntent === "search for resources") {
       let urls = await this.fetchResources(userInput);
       updateMessages = [
@@ -243,6 +263,32 @@ export default class Chatbox extends Component {
     }
   };
 
+  renderMessage(message) {
+    if (message.user == "bot" && message.verified) {
+      return <div>
+        <Typewriter options={{ delay: 30, cursor: "", }} onInit={(typewriter) => {
+          typewriter
+            .typeString(message.text)
+            .start()
+            .typeString('<br><br><span>Message Verified by Medical Professional</span>')
+            .start();
+        }} />
+      </div>;
+    } else if (message.user == "bot" && !message.verified) {
+      return <div>
+        <Typewriter options={{ delay: 30, cursor: "", }} onInit={(typewriter) => {
+          typewriter
+            .typeString(message.text)
+            .start()
+            .typeString('<br><br><span>Message NOT Verified by Medical Professional</span>')
+            .start();
+        }} />
+      </div>;
+    } else {
+      return message.text
+    }
+  }
+
   renderMessages() {
     return this.state.messages.map((message, index) => (
       <div className={"flex " + (message.user == "bot" ? "justify-start" : "justify-end")}>
@@ -250,17 +296,13 @@ export default class Chatbox extends Component {
           <BotMessageSquare className="h-4 w-4" />
           <AlertTitle>{message.user}</AlertTitle>
           <AlertDescription>
-            {message.user == "bot" ?
-              <Typewriter options={{ delay: 30, cursor: "", }} onInit={(typewriter) => {
-                typewriter
-                .typeString(message.text)
-                .start();
-              }} /> : message.text}
+            {this.renderMessage(message)}
           </AlertDescription>
         </Alert>
       </div>
     ));
   }
+
   renderAppointmentCancel() {
     return (
       <div>

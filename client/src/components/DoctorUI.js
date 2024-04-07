@@ -6,6 +6,7 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 // import '../App.css'
 import AppointmentView from './AppointmentView';
+import ChatVerificationView from './ChatVerificationView';
 import CreateTimeSlot from './CreateTimeSlot';
 
 const firebaseConfig = {
@@ -53,6 +54,7 @@ export default function DoctorUI() {
         <Routes>
           <Route path='/create-time-slot' element={<CreateTimeSlot />} />
           <Route path='/view-appointments' element={<AppointmentView />} />
+          <Route path='/view-unverified-chatbot' element={<ChatVerificationView />} />
         </Routes>
         {/* <CreateTimeSlot /> */}
         {/* <AppointmentView/> */}
