@@ -1,4 +1,4 @@
-import React, { Component, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from 'axios';
 import { io } from 'socket.io-client'
 import "../App.css";
@@ -8,6 +8,31 @@ import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, quer
 import Typewriter from "typewriter-effect";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { cn } from "../lib/utils"
+import { Calendar } from "./calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "./popover"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./card"
+import { Label } from "./label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./select"
 import { Input } from "./input";
 import { Button } from "./button";
 import { Alert, AlertDescription, AlertTitle } from "./alert"
@@ -28,57 +53,55 @@ const socket = io('http://localhost:4000');
 const app = initializeApp(firebaseConfig);
 const db = getFirestore();
 
-export default class Chatbox extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      messages: [],
-      enabledDates: [],
-      timeSlots: [],
-      filteredTimeSlots: [],
-      doctorsForSelectedDate: [],
-      selectedDate: "",
-      selectedDoctorID: "",
-      selectedDoctorName: "",
-      selectedSlotId: "",
-      userInput: "",
-      isBookingAppointment: false,
-      isCancelAppointment: false,
-    };
-  }
+const Chatbox = (props) => {
+  const [messages, setMessages] = useState([]);
+  const [enabledDates, setEnabledDates] = useState([]);
+  const [timeSlots, setTimeSlots] = useState([]);
+  const [filteredTimeSlots, setFilteredTimeSlots] = useState([]);
+  const [doctorsForSelectedDate, setDoctorsForSelectedDate] = useState([]);
+  const [date, setDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDoctorID, setSelectedDoctorID] = useState("");
+  const [selectedDoctorName, setSelectedDoctorName] = useState("");
+  const [selectedSlotId, setSelectedSlotId] = useState("");
+  const [userInput, setUserInput] = useState("");
+  const [isBookingAppointment, setIsBookingAppointment] = useState(false);
+  const [isCancelAppointment, setIsCancelAppointment] = useState(false);
 
-  handleInputChange = (e) => {
-    this.setState({
-      userInput: e.target.value,
-    });
+  useEffect(() => {
+    socket.on("fetch_available_doctors", async (data) => {
+      setDoctorsForSelectedDate(data.availableDoctors);
+    })
+  }, [socket]);
+
+  useEffect(() => {
+    socket.on("fetch_doctor_slots", async (data) => {
+      setFilteredTimeSlots(data.availableSlots);
+    })
+  }, [socket]);
+
+  useEffect(() => {
+    socket.on("fetch_user_booked_slots", async (data) => {
+      setFilteredTimeSlots(data.userSlots);
+    })
+  }, [socket]);
+
+  const handleInputChange = (e) => {
+    setUserInput(e.target.value);
   };
 
-  resetState = () => {
-    this.setState({
-      enabledDates: [],
-      timeSlots: [],
-      filteredTimeSlots: [],
-      doctorsForSelectedDate: [],
-      selectedDate: "",
-      selectedDoctorID: "",
-      selectedDoctorName: "",
-      selectedSlotId: "",
-    });
+  const resetState = () => {
+    setEnabledDates([]);
+    setTimeSlots([]);
+    setFilteredTimeSlots([]);
+    setDoctorsForSelectedDate([]);
+    setSelectedDate("");
+    setSelectedDoctorID("");
+    setSelectedDoctorName("");
+    setSelectedSlotId("");
   }
 
-  fetchTimeSlots = async (slotDate) => {
-    const slots = [];
-    const slotQuery = query(collection(db, "Time Slots"), where("slotDate", "==", slotDate));
-    const slotQuerySnap = await getDocs(slotQuery);
-    slotQuerySnap.forEach((doc) => {
-      let data = doc.data();
-      data.slotId = doc.id;
-      slots.push(data);
-    });
-    return slots;
-  }
-
-  fetchBookedTimeSlots = async (slotDate) => {
+  const fetchBookedTimeSlots = async (slotDate) => {
     const slots = [];
     const slotQuery = query(collection(db, "Booked Time Slots"), where("slotDate", "==", slotDate));
     const slotQuerySnap = await getDocs(slotQuery);
@@ -90,7 +113,7 @@ export default class Chatbox extends Component {
     return slots;
   }
 
-  fetchAvailableDates = async () => {
+  const fetchAvailableDates = async () => {
     const slotDates = [];
     const slotDateQuery = query(collection(db, "Time Slots"));
     const slotDateQuerySnap = await getDocs(slotDateQuery);
@@ -103,7 +126,7 @@ export default class Chatbox extends Component {
     return slotDates;
   }
 
-  fetchBookedDates = async (userId) => {
+  const fetchBookedDates = async (userId) => {
     const slotDates = [];
     const slotDateQuery = query(collection(db, "Booked Time Slots"), where("userId", "==", userId));
     const slotDateQuerySnap = await getDocs(slotDateQuery);
@@ -116,17 +139,7 @@ export default class Chatbox extends Component {
     return slotDates;
   }
 
-  fetchSlotsByDoctorID = (doctorID) => {
-    const filteredSlots = [];
-    this.state.timeSlots.forEach((slot) => {
-      if (slot.doctorId == doctorID) {
-        filteredSlots.push(slot);
-      }
-    });
-    return filteredSlots;
-  }
-
-  fetchDoctorById = async (doctorId) => {
+  const fetchDoctorById = async (doctorId) => {
     const doctorDocRef = doc(db, "Users", doctorId);
     const doctorDataSnap = await getDoc(doctorDocRef);
     if (doctorDataSnap.exists()) {
@@ -135,7 +148,7 @@ export default class Chatbox extends Component {
     return null;
   }
 
-  fetchResources = async (userInput) => {
+  const fetchResources = async (userInput) => {
     let response = await axios.post('http://192.168.68.108:5000/process_query', { query: userInput });
     let top_5_links = response.data.links.slice(0, 5);
     let top5linkstr = "";
@@ -148,7 +161,7 @@ export default class Chatbox extends Component {
     return top5linkstr;
   }
 
-  fetchUserAppointments = async (userId) => {
+  const fetchUserAppointments = async (userId) => {
     const patientAppointments = [];
     const patientTimeSlotsQuery = query(collection(db, "Booked Time Slots"), where("userId", "==", userId));
     const patientTimeSlotsQuerySnap = await getDocs(patientTimeSlotsQuery);
@@ -159,279 +172,346 @@ export default class Chatbox extends Component {
     return patientAppointments;
   }
 
-  fetchChatbotMessage = async (message) => {
+  const fetchChatbotMessage = async (message) => {
     const chatbotMessages = [];
     const chatbotMessageQuery = query(collection(db, "chatbot messages"), where("message", "==", message));
     const chatbotMessageQuerySnap = await getDocs(chatbotMessageQuery);
-    chatbotMessageQuerySnap.forEach((doc) => {
-      let data = doc.data();
-      chatbotMessages.push(data);
-    });
+    chatbotMessageQuerySnap.forEach(
+      (doc) => {
+        let data = doc.data();
+        chatbotMessages.push(data);
+      });
     return chatbotMessages;
   }
 
-  fetchChatResponse = async (userQuestion) => {
+  const fetchChatResponse = async (userQuestion) => {
     let response = await axios.post('http://192.168.68.108:5000/chatresponse', userQuestion);
     return response.data.chat_response;
   }
 
-  fetchUserIntent = async (userQuestion) => {
+  const fetchUserIntent = async (userQuestion) => {
     let response = await axios.post('http://192.168.68.108:5000/userintent', userQuestion);
     let labels = response.data.user_intent;
     labels.sort((a, b) => b.score - a.score);
     return labels[0].label;
   }
 
-  handleSendMessage = async () => {
-    const { userInput, messages, isBookingAppointment, isCancelAppointment, timeSlots } = this.state;
+  useEffect(() => { console.log("Messages Updated: ", messages); }, [messages]);
 
+  const handleSendMessage = async () => {
     if (userInput.trim() === "") return; // Prevent sending empty messages
 
     // Add the user's message to the list
-    let updateMessages = [...messages, { text: userInput, user: "You" }];
-
-    this.setState({ messages: updateMessages, userInput: "" });
+    setMessages(prevMessages => {
+      return [...prevMessages, { text: userInput, user: "You" }];
+    });
+    setUserInput("");
 
     const userQuestion = new FormData();
     userQuestion.append('prompt', userInput);
-    let userIntent = await this.fetchUserIntent(userQuestion);
+    let userIntent = await fetchUserIntent(userQuestion);
     if (isBookingAppointment || isCancelAppointment) {
-      this.resetState();
-      this.setState({ isBookingAppointment: false });
-      this.setState({ isCancelAppointment: false });
+      resetState();
+      setIsBookingAppointment(false);
+      setIsCancelAppointment(false);
     }
     if (userIntent === "chat" || userIntent === "question") {
-      let chatResponse = await this.fetchChatResponse(userQuestion);
+      let chatResponse = await fetchChatResponse(userQuestion);
       socket.emit('send_message', { message: chatResponse.replace(/\n/g, '') }, async (response) => {
         if (response.status == "success") {
-          let chatbotMessages = await this.fetchChatbotMessage(chatResponse.replace(/\n/g, ''));
+          let chatbotMessages = await fetchChatbotMessage(chatResponse.replace(/\n/g, ''));
           let chatbotMessage = chatbotMessages[0];
-          updateMessages = [
-            ...this.state.messages,
-            { text: chatResponse, user: "bot", verified: chatbotMessage.verified },
-          ];
-          this.setState({ messages: updateMessages });
+          setMessages(prevMessages => {
+            return [...prevMessages, { text: chatResponse, user: "bot", verified: chatbotMessage.verified, userIntent: "chat" }];
+          });
         }
       });
     } else if (userIntent === "search for resources") {
-      let urls = await this.fetchResources(userInput);
-      updateMessages = [
-        ...this.state.messages,
-        { text: urls, user: "bot" },
-      ];
+      let urls = await fetchResources(userInput);
+      setMessages(prevMessages => {
+        return [...prevMessages, { text: urls, user: "bot", userIntent: "search" }];
+      });
     } else if (userIntent === "view appointments") {
-
-      let patientAppointments = await this.fetchUserAppointments(this.props.userId);
-      let patientApptInfo = [{ text: `You currently have ${patientAppointments.length} upcoming appointments`, user: "bot" }];
+      let patientAppointments = await fetchUserAppointments(props.userId);
+      let patientApptInfo = [{ text: `You currently have ${patientAppointments.length} upcoming appointments`, user: "bot", userIntent: "view" }];
       for (let i = 0; i < patientAppointments.length; i++) {
-        let doctorInfo = await this.fetchDoctorById(patientAppointments[i].doctorId);
+        let doctorInfo = await fetchDoctorById(patientAppointments[i].doctorId);
         patientAppointments[i].doctorEmail = doctorInfo.email;
         patientAppointments[i].doctorFName = doctorInfo.firstName;
         patientAppointments[i].doctorLName = doctorInfo.lastName;
         let apptInfoStr = "You have an appointment with Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName + " on " + patientAppointments[i].slotDate +
           " from " + patientAppointments[i].startTime + " to " + patientAppointments[i].endTime;
-        patientApptInfo.push({ text: apptInfoStr, user: "bot" });
+        patientApptInfo.push({ text: apptInfoStr, user: "bot", userIntent: "view" });
       }
-      updateMessages = [
-        ...this.state.messages,
-        ...patientApptInfo,
-      ];
+      setMessages(prevMessages => {
+        return [...prevMessages, ...patientApptInfo];
+      });
     } else if (userIntent == "cancel appointment") {
-      let enabledDates = await this.fetchBookedDates(this.props.userId);
-      this.setState({ isCancelAppointment: true });
-      this.setState({ enabledDates: enabledDates });
-      updateMessages = [
-        ...this.state.messages,
-        { text: "I would be glad to assist you in cancelling an appointment!", user: "bot" },
-      ];
+      let enabledDates = await fetchBookedDates(props.userId);
+      setIsCancelAppointment(true);
+      setEnabledDates(enabledDates);
+      setMessages(prevMessages => {
+        return [...prevMessages, { text: "I would be glad to assist you in cancelling an appointment!", user: "bot", userIntent: "cancel" }];
+      });
     } else {
-      let enabledDates = await this.fetchAvailableDates();
-      this.setState({ isBookingAppointment: true });
-      this.setState({ enabledDates: enabledDates });
-      updateMessages = [
-        ...this.state.messages,
-        { text: "I would be glad to assist you in booking an appointment! What date would you like to book for?", user: "bot" },
-      ];
+      let enabledDates = await fetchAvailableDates();
+      setIsBookingAppointment(true);
+      setEnabledDates(enabledDates);
+      setMessages(prevMessages => {
+        return [...prevMessages, { text: "I would be glad to assist you in booking an appointment! What date would you like to book for?", user: "bot", userIntent: "book" }];
+      });
     }
-    this.setState({ messages: updateMessages });
   };
 
-  handleKeyDown = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault(); // Prevent default form submission behavior
-      this.handleSendMessage();
+      handleSendMessage();
     }
   };
 
-  renderMessage(message) {
-    if (message.user == "bot" && message.verified) {
-      return <div>
-        <Typewriter options={{ delay: 30, cursor: "", }} onInit={(typewriter) => {
-          typewriter
-            .typeString(message.text)
-            .start()
-            .typeString('<br><br><span>Message Verified by Medical Professional</span>')
-            .start();
-        }} />
-      </div>;
-    } else if (message.user == "bot" && !message.verified) {
-      return <div>
-        <Typewriter options={{ delay: 30, cursor: "", }} onInit={(typewriter) => {
-          typewriter
-            .typeString(message.text)
-            .start()
-            .typeString('<br><br><span>Message NOT Verified by Medical Professional</span>')
-            .start();
-        }} />
-      </div>;
+  const renderMessage = (message) => {
+    let verificationMessage = "";
+    if (message.user == "bot" && message.verified && (message.userIntent == "chat" || message.userIntent == "search")) {
+      verificationMessage += "<br><br><span>Message Verified by Medical Professional</span>";
+    } else if (message.user == "bot" && !message.verified && (message.userIntent == "chat" || message.userIntent == "search")) {
+      verificationMessage += "<br><br><span>Message NOT Verified by Medical Professional</span>";
     } else {
-      return message.text
+      return message.text;
     }
-  }
+    return (
+      <div>
+        <Typewriter
+          options={{ delay: 30, cursor: "" }}
+          onInit={(typewriter) => {
+            typewriter
+              .typeString(message.text)
+              .start()
+              .typeString(verificationMessage)
+              .start();
+          }}
+        />
+      </div>
+    );
+  };
 
-  renderMessages() {
-    return this.state.messages.map((message, index) => (
-      <div className={"flex " + (message.user == "bot" ? "justify-start" : "justify-end")}>
+  const renderMessages = () => {
+    return messages.map((message, index) => (
+      <div className={"flex " + (message.user == "bot" ? "justify-start" : "justify-end")} >
         <Alert key={index} className="w-2/4 mt-5">
           <BotMessageSquare className="h-4 w-4" />
           <AlertTitle>{message.user}</AlertTitle>
           <AlertDescription>
-            {this.renderMessage(message)}
+            {renderMessage(message)}
           </AlertDescription>
         </Alert>
       </div>
     ));
-  }
+  };
 
-  renderAppointmentCancel() {
+  const renderCancelAppointment = () => {
     return (
       <div>
-        <DatePicker selected={this.state.selectedDate} onChange={async date => {
-          this.setState({ selectedDate: date });
-          let bookedSlots = await this.fetchBookedTimeSlots(moment(date).format('YYYY-MM-DD'));
-          this.setState({ timeSlots: bookedSlots });
-        }}
-          filterDate={(d) => this.state.enabledDates.includes(moment(d).format('YYYY-MM-DD'))}
-        />
-        <br />
-        <br />
-        {this.state.timeSlots.length != 0 &&
-          <select value={this.state.selectedSlotId} onChange={(e) => {
-            this.setState({ selectedSlotId: e.target.value });
-          }}>
-            <option value="" selected disabled hidden>Choose here</option>
-            {this.state.timeSlots.map(slot => <option value={slot.slotId}>{"Appointment Time " + slot.startTime + "-" + slot.endTime}</option>)}
-          </select>
-        }
-        <br />
-        <br />
-        {this.state.selectedSlotId !== "" &&
-          <button onClick={async () => {
-            let selectedSlot = this.state.timeSlots.filter(slot => {
-              return slot.slotId === this.state.selectedSlotId;
-            });
-            delete selectedSlot[0]['userId'];
-            await setDoc(doc(db, "Time Slots", this.state.selectedSlotId), selectedSlot[0])
-            await deleteDoc(doc(db, "Booked Time Slots", this.state.selectedSlotId));
-            this.setState({ isCancelAppointment: false });
-            let updateMessages = [
-              ...this.state.messages,
-              { text: "Thank you for allowing us to help you cancel your appointment! Have a great day!", user: "bot" },
-            ];
-            this.setState({ messages: updateMessages, userInput: "" });
-            this.resetState();
-          }}>Cancel Appointment</button>
-        }
-      </div>);
-  }
-
-  renderAppointmentBooking() {
-    return (
-      <div>
-        <DatePicker selected={this.state.selectedDate} onChange={async date => {
-          this.setState({ selectedDate: date });
-          let doctors = [];
-          let timeSlots = await this.fetchTimeSlots(moment(date).format('YYYY-MM-DD'));
-          this.setState({ timeSlots: timeSlots });
-          for (let i = 0; i < timeSlots.length; i++) {
-            let doctorInfo = await this.fetchDoctorById(timeSlots[i].doctorId);
-            if (!doctors.some(doctor => doctor.firstName === doctorInfo.firstName)) {
-              doctors.push(doctorInfo);
-            }
-          }
-          this.setState({ doctorsForSelectedDate: doctors });
-        }}
-          filterDate={(d) => this.state.enabledDates.includes(moment(d).format('YYYY-MM-DD'))}
-        />
-        <br />
-        <br />
-        {this.state.doctorsForSelectedDate.length != 0 &&
-          <select value={this.state.selectedDoctorID} onChange={(e) => {
-            this.setState({ selectedDoctorID: e.target.value });
-            let filteredSlots = this.fetchSlotsByDoctorID(e.target.value);
-            this.setState({ filteredTimeSlots: filteredSlots });
-          }
-          }>
-            <option value="" selected disabled hidden>Choose here</option>
-            {this.state.doctorsForSelectedDate.map(doctor => <option value={doctor.uid}>{"Dr. " + doctor.firstName + " " + doctor.lastName}</option>)}
-          </select>
-
-        }
-        <br />
-        <br />
-        {this.state.selectedDoctorID !== "" &&
-          <select value={this.state.selectedSlotId} onChange={(e) => {
-            this.setState({ selectedSlotId: e.target.value });
-          }}>
-            <option value="" selected disabled hidden>Choose here</option>
-            {this.state.filteredTimeSlots.map(slot => <option value={slot.slotId}>{"Appointment Time " + slot.startTime + "-" + slot.endTime}</option>)}
-          </select>
-        }
-        <br />
-        <br />
-        {this.state.selectedSlotId !== "" &&
-          <button onClick={async () => {
-            let userId = this.props.userId
-            let doctorInfo = await this.fetchDoctorById(this.state.selectedDoctorID);
-            let selectedSlot = this.state.filteredTimeSlots.filter(slot => {
-              return slot.slotId === this.state.selectedSlotId;
-            });
-            selectedSlot[0].userId = userId;
-            // add updated slot to "booked time slots"
-            await setDoc(doc(db, "Booked Time Slots", this.state.selectedSlotId), selectedSlot[0])
-            // remove slot from "time slots" collection
-            await deleteDoc(doc(db, "Time Slots", this.state.selectedSlotId));
-            this.setState({ isBookingAppointment: false });
-
-            let updateMessages = [
-              ...this.state.messages,
-              { text: `Thank you for booking an appointment! You are all set for your appointment on ${this.state.selectedDate} with ${"Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName}`, user: "bot" },
-            ];
-            this.setState({ messages: updateMessages, userInput: "" });
-            this.resetState();
-          }}>Book Appointment</button>
-        }
+        <Card className="w-[350px]">
+          <CardHeader>
+            <CardTitle>Cancel Appointment</CardTitle>
+            <CardDescription>Cancel an appointment.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form>
+              <div className="grid w-full items-center gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="name">Appointment Date</Label>
+                  <Select onValueChange={
+                    (value) => {
+                      setSelectedDate(value);
+                      console.log(value);
+                      console.log(props.userId);
+                      socket.emit("selected_cancel_date", { cancelDate: value, patientId: props.userId });
+                    }
+                  }>
+                    <SelectTrigger id="framework">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {enabledDates.map(date => <SelectItem value={date}>{date}</SelectItem>)}
+                      {/* {doctorsForSelectedDate.map(doctor => <SelectItem key={doctor.uid} value={doctor.uid}>{"Dr. " + doctor.firstName + " " + doctor.lastName}</SelectItem>)} */}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="framework">Doctors</Label>
+                  <Select onValueChange={
+                    (value) => {
+                      setSelectedSlotId(value)
+                      console.log(value);
+                    }
+                  }>
+                    <SelectTrigger id="framework">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {filteredTimeSlots.map(slot => <SelectItem value={slot.slotId}>{"Start Time: " + slot.startTime + " End Time: " + slot.endTime}</SelectItem>)}
+                      {/* {doctorsForSelectedDate.map(doctor => <SelectItem key={doctor.uid} value={doctor.uid}>{"Dr. " + doctor.firstName + " " + doctor.lastName}</SelectItem>)} */}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button variant="outline" onClick={
+              () => {
+                resetState();
+                setIsCancelAppointment(false);
+              }
+            }>Cancel</Button>
+            <Button onClick={async () => {
+              let selectedSlot = filteredTimeSlots.filter(slot => slot.slotId === selectedSlotId);
+              delete selectedSlot[0]['userId'];
+              await setDoc(doc(db, "Time Slots", selectedSlotId), selectedSlot[0])
+              await deleteDoc(doc(db, "Booked Time Slots", selectedSlotId));
+              setIsCancelAppointment(false);
+              setMessages(prevMessages => {
+                return [...prevMessages, { text: "Thank you for allowing us to help you cancel your appointment! Have a great day!", user: "bot" }];
+              });
+              setUserInput("");
+              resetState();
+            }}>Cancel Appointment</Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
 
-  render() {
+  const renderBookAppointment = () => {
     return (
-      <div className="chat-container ml-64 h-screen">
-        <div className="chat-messages flex justify-center h-3/4">
-          <ScrollArea className="mt-10 h-4/5 w-4/5">
-            {this.renderMessages()}
-            {this.state.isCancelAppointment && this.renderAppointmentCancel()}
-            {this.state.isBookingAppointment && this.renderAppointmentBooking()}
-          </ScrollArea>
-        </div>
-        <center>
-          <div className="chat-input flex justify-center bottom-0">
-            <Input className="w-80 mt-40" type="text" placeholder="Type a message..." value={this.state.userInput} onChange={this.handleInputChange} onKeyDown={this.handleKeyDown}></Input>
-            <Button className="ml-2 mt-40" onClick={this.handleSendMessage}><Send className="h-4 w-4" /></Button>
-          </div>
-        </center>
-      </div >
+      <div>
+        <Card className="w-[350px]">
+          <CardHeader>
+            <CardTitle>Book Appointment</CardTitle>
+            <CardDescription>Book a new appointment.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form>
+              <div className="grid w-full items-center gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="name">Appointment Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-[280px] justify-start text-left font-normal",
+                          !date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={
+                          (date) => {
+                            setDate(date);
+                            console.log(date);
+                            socket.emit("selected_appointment_date", { selectedDate: date });
+                          }
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="framework">Doctors</Label>
+                  <Select onValueChange={
+                    (value) => {
+                      setSelectedDoctorID(value);
+                      console.log(value);
+                      socket.emit("selected_doctor_id", { doctorId: value });
+                    }
+                  }>
+                    <SelectTrigger id="framework">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {doctorsForSelectedDate.map(doctor => <SelectItem key={doctor.uid} value={doctor.uid}>{"Dr. " + doctor.firstName + " " + doctor.lastName}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="framework">Time Slot</Label>
+                  <Select onValueChange={
+                    (slotId) => {
+                      setSelectedSlotId(slotId);
+                      console.log(slotId);
+                    }
+                  }>
+                    <SelectTrigger id="framework">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {filteredTimeSlots.map(slot => <SelectItem key={slot.slotId} value={slot.slotId}>{"Start: " + slot.startTime + " " + "End: " + slot.endTime}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button variant="outline" onClick={
+              () => {
+                resetState();
+                setIsBookingAppointment(false);
+              }
+            }>Cancel</Button>
+            <Button onClick={async () => {
+              let userId = props.userId
+              let doctorInfo = await fetchDoctorById(selectedDoctorID);
+              let selectedSlot = filteredTimeSlots.filter(slot => {
+                return slot.slotId === selectedSlotId;
+              });
+              selectedSlot[0].userId = userId;
+              // add updated slot to "booked time slots"
+              await setDoc(doc(db, "Booked Time Slots", selectedSlotId), selectedSlot[0])
+              // remove slot from "time slots" collection
+              await deleteDoc(doc(db, "Time Slots", selectedSlotId));
+              resetState();
+              setIsBookingAppointment(false);
+              let updateMessages = [
+                ...messages,
+                { text: `Thank you for booking an appointment! You are all set for your appointment on ${date} with ${"Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName}`, user: "bot" },
+              ];
+              setMessages(updateMessages);
+              setUserInput("");
+            }}>Book Appointment</Button>
+          </CardFooter>
+        </Card>
+      </div>
     );
-  }
-}
+  };
+
+  return (
+    <div className="chat-container ml-64 h-screen">
+      <div className="chat-messages flex justify-center h-3/4">
+        <ScrollArea className="mt-10 h-4/5 w-4/5">
+          {renderMessages()}
+          <br />
+          {isCancelAppointment && renderCancelAppointment()}
+          {isBookingAppointment && renderBookAppointment()}
+        </ScrollArea>
+      </div>
+      <center>
+        <div className="chat-input flex justify-center bottom-0">
+          <Input className="w-80 mt-40" type="text" placeholder="Type a message..." value={userInput} onChange={handleInputChange} onKeyDown={handleKeyDown}></Input>
+          <Button className="ml-2 mt-40" onClick={handleSendMessage}><Send className="h-4 w-4" /></Button>
+        </div>
+      </center>
+    </div >
+  );
+};
+
+export default Chatbox;

@@ -106,7 +106,7 @@ const Auth = () => {
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" onInput={i => { setUserSignInPassword(i.target.value) }} />
+                  <Input id="password" type="password" onInput={i => { setUserSignInPassword(i.target.value) }} />
                 </div>
               </CardContent>
               <CardFooter>

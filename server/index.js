@@ -1,8 +1,9 @@
 const express = require('express');
+const moment = require('moment');
 const http = require('http');
 const cors = require('cors');
 const { initializeApp } = require('firebase/app');
-const { getFirestore, addDoc, collection, query, getDocs, where } = require('firebase/firestore');
+const { getFirestore, addDoc, getDoc, doc, collection, query, getDocs, where } = require('firebase/firestore');
 const { Server } = require('socket.io');
 
 const firebaseConfig = {
@@ -28,12 +29,57 @@ const io = new Server(server, {
     }
 });
 
+const fetchTimeSlots = async (slotDate) => {
+    const slots = [];
+    const slotQuery = query(collection(db, "Time Slots"), where("slotDate", "==", slotDate));
+    const slotQuerySnap = await getDocs(slotQuery);
+    slotQuerySnap.forEach((doc) => {
+        let data = doc.data();
+        data.slotId = doc.id;
+        slots.push(data);
+    });
+    return slots;
+}
+
+const fetchDoctorById = async (doctorId) => {
+    const doctorDocRef = doc(db, "Users", doctorId);
+    const doctorDataSnap = await getDoc(doctorDocRef);
+    if (doctorDataSnap.exists()) {
+        return doctorDataSnap.data();
+    }
+    return null;
+}
+
+const fetchSlotsByDoctorID = async (doctorID) => {
+    const filteredSlots = [];
+    const slotQuery = query(collection(db, "Time Slots"), where("doctorId", "==", doctorID));
+    const slotQuerySnap = await getDocs(slotQuery);
+    slotQuerySnap.forEach((slot) => {
+        let data = slot.data();
+        data.slotId = slot.id;
+        filteredSlots.push(data);
+    });
+    return filteredSlots;
+}
+
+const fetchBookTimes = async (date, patientId) => {
+    const bookedTimes = [];
+    const slotQuery = query(collection(db, "Booked Time Slots"), where("slotDate", "==", date), where("userId", "==", patientId));
+    const slotQuerySnap = await getDocs(slotQuery);
+    slotQuerySnap.forEach((slot) => {
+        let data = slot.data();
+        data.slotId = slot.id;
+        bookedTimes.push(data);
+    });
+    return bookedTimes;
+}
+
 io.on("connection", (socket) => {
     socket.on("send_message", async (data, callback) => {
         const messagesRef = collection(db, "chatbot messages");
         const messageQuery = query(messagesRef, where("message", "==", data.message));
         const messageSnapshot = await getDocs(messageQuery);
-        if(messageSnapshot.empty) {
+        if (messageSnapshot.empty) {
             console.log('Adding new message to database');
             const newMessage = {
                 message: data.message,
@@ -45,6 +91,30 @@ io.on("connection", (socket) => {
         callback({
             status: "success",
         });
+    });
+
+    socket.on("selected_appointment_date", async (data, callback) => {
+        let timeSlots = await fetchTimeSlots(moment(data.selectedDate).format('YYYY-MM-DD'));
+        console.log(moment(data.selectedDate).format('YYYY-MM-DD'));
+        console.log(timeSlots);
+        let doctors = [];
+        for (let i = 0; i < timeSlots.length; i++) {
+            let doctorInfo = await fetchDoctorById(timeSlots[i].doctorId);
+            if (!doctors.some(doctor => doctor.firstName === doctorInfo.firstName)) {
+                doctors.push(doctorInfo);
+            }
+        }
+        socket.emit("fetch_available_doctors", { availableDoctors: doctors });
+    });
+
+    socket.on("selected_doctor_id", async (data, callback) => {
+        let slots = await fetchSlotsByDoctorID(data.doctorId);
+        socket.emit("fetch_doctor_slots", {availableSlots: slots});
+    });
+
+    socket.on("selected_cancel_date", async (data, callback) => {
+        let userSlots = await fetchBookTimes(data.cancelDate, data.patientId);
+        socket.emit("fetch_user_booked_slots", {userSlots: userSlots});
     });
 })
 
