@@ -107,7 +107,7 @@ export default function AppointmentView() {
                     <div className='pending-appointment-card-container'>
                         <Card className="w-[250px]">
                             <CardHeader>
-                                <CardTitle>Create Time Slot</CardTitle>
+                                <CardTitle>Booked Slot</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="grid w-full items-center gap-4">
@@ -130,7 +130,7 @@ export default function AppointmentView() {
                                     cancelBookedSlot(slot.id);
                                     let updatedData = await fetchBookedSlots();
                                     setBookedSlotData(updatedData);
-                                }}>Create Slot</Button>
+                                }}>Cancel Appointment</Button>
                             </CardFooter>
                         </Card>
                         <br />
@@ -144,7 +144,7 @@ export default function AppointmentView() {
                     <div className='pending-appointment-card-container'>
                         <Card className="w-[250px]">
                             <CardHeader>
-                                <CardTitle>Create Time Slot</CardTitle>
+                                <CardTitle>Open Slot</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="grid w-full items-center gap-4">

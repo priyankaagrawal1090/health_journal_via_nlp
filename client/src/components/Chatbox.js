@@ -228,8 +228,16 @@ const Chatbox = (props) => {
       });
     } else if (userIntent === "search for resources") {
       let urls = await fetchResources(userInput);
-      setMessages(prevMessages => {
-        return [...prevMessages, { text: urls, user: "bot", userIntent: "search" }];
+      socket.emit('send_message', { message: urls }, async (response) => {
+        console.log('Emitted successfully');
+        if (response.status == "success") {
+          let chatbotMessages = await fetchChatbotMessage(urls);
+          let chatbotMessage = chatbotMessages[0];
+          console.log("URLS: ", chatbotMessage);
+          setMessages(prevMessages => {
+            return [...prevMessages, { text: chatbotMessage.message, user: "bot", verified: chatbotMessage.verified, userIntent: "search" }];
+          });
+        }
       });
     } else if (userIntent === "view appointments") {
       let patientAppointments = await fetchUserAppointments(props.userId);

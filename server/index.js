@@ -80,7 +80,7 @@ io.on("connection", (socket) => {
         const messageQuery = query(messagesRef, where("message", "==", data.message));
         const messageSnapshot = await getDocs(messageQuery);
         if (messageSnapshot.empty) {
-            console.log('Adding new message to database');
+            console.log('Adding new message to database', data.message);
             const newMessage = {
                 message: data.message,
                 verified: false,
