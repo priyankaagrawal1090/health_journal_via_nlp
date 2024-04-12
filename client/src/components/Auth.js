@@ -161,14 +161,16 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="space-y-1">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1 grid gap-2">
                   <Label htmlFor="user-reg-email">Email</Label>
                   <Input id="user-reg-email" type="email" onInput={i => { setUserRegEmail(i.target.value) }} />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 grid gap-2">
                   <Label htmlFor="user-reg-phone">Phone Number</Label>
                   <Input id="user-reg-phone" type="tel" onInput={i => { setUserPhoneNum(i.target.value) }} />
                 </div>
+              </div>
                 <div className="space-y-1">
                   <Label htmlFor="user-reg-fname">First Name</Label>
                   <Input id="user-reg-fname" type="text" onInput={i => { setUserFirstName(i.target.value) }} />
@@ -177,36 +179,38 @@ const Auth = () => {
                   <Label htmlFor="user-reg-lname">Last Name</Label>
                   <Input id="user-reg-lname" type="text" onInput={i => { setUserLastName(i.target.value) }} />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="user-reg-lname">Gender</Label>
-                  <Select onValueChange={(gender) => { setUserGender(gender) }}>
-                    <SelectTrigger className="">
-                      <SelectValue placeholder="Choose an option" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="man">Man</SelectItem>
-                        <SelectItem value="woman">Woman</SelectItem>
-                        <SelectItem value="nonbinary">Non-binary</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                        <SelectItem value="na">Prefer not to say</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="user-reg-lname">Account Type</Label>
-                  <Select onValueChange={(accType) => { setUserAccType(accType) }}>
-                    <SelectTrigger className="">
-                      <SelectValue placeholder="Choose an option" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="patient">Patient</SelectItem>
-                        <SelectItem value="doctor">Doctor</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1 grid gap-2">
+                    <Label htmlFor="user-reg-lname">Gender</Label>
+                    <Select onValueChange={(gender) => { setUserGender(gender) }}>
+                      <SelectTrigger className="">
+                        <SelectValue placeholder="Choose an option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="man">Man</SelectItem>
+                          <SelectItem value="woman">Woman</SelectItem>
+                          <SelectItem value="nonbinary">Non-binary</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                          <SelectItem value="na">Prefer not to say</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1 grid gap-2">
+                    <Label htmlFor="user-reg-lname">Account Type</Label>
+                    <Select onValueChange={(accType) => { setUserAccType(accType) }}>
+                      <SelectTrigger className="">
+                        <SelectValue placeholder="Choose an option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="patient">Patient</SelectItem>
+                          <SelectItem value="doctor">Doctor</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="user-reg-pwrd">Password</Label>
@@ -219,6 +223,7 @@ const Auth = () => {
               </CardContent>
               <CardFooter>
                 <Button onClick={async () => {
+                  // TODO: validate register form fields
                   const signUpSuccess = await signUp(db, auth, userRegEmail, userPhoneNum, userFirstName, userLastName, userGender, userRegPassword, userRegConfPassword, userAccType);
                   if (signUpSuccess) {
                     if (userAccType == "patient") {
