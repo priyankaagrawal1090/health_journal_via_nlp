@@ -3,6 +3,7 @@ import axios from 'axios';
 import { io } from 'socket.io-client'
 import "../App.css";
 import { initializeApp } from 'firebase/app'
+import moment from "moment"
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where } from 'firebase/firestore';
 import Typewriter from "typewriter-effect";
 import "react-datepicker/dist/react-datepicker.css";
@@ -34,7 +35,7 @@ import {
 import { Input } from "./input";
 import { Button } from "./button";
 import { Alert, AlertDescription, AlertTitle } from "./alert"
-import { Send, BotMessageSquare, CheckCheck } from "lucide-react";
+import { Send, BotMessageSquare } from "lucide-react";
 import { ScrollArea } from "./scroll-area";
 
 const firebaseConfig = {
@@ -54,13 +55,11 @@ const db = getFirestore();
 const Chatbox = (props) => {
   const [messages, setMessages] = useState([]);
   const [enabledDates, setEnabledDates] = useState([]);
-  const [timeSlots, setTimeSlots] = useState([]);
   const [filteredTimeSlots, setFilteredTimeSlots] = useState([]);
   const [doctorsForSelectedDate, setDoctorsForSelectedDate] = useState([]);
   const [date, setDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedDoctorID, setSelectedDoctorID] = useState("");
-  const [selectedDoctorName, setSelectedDoctorName] = useState("");
   const [selectedSlotId, setSelectedSlotId] = useState("");
   const [userInput, setUserInput] = useState("");
   const [isBookingAppointment, setIsBookingAppointment] = useState(false);
@@ -90,12 +89,10 @@ const Chatbox = (props) => {
 
   const resetState = () => {
     setEnabledDates([]);
-    setTimeSlots([]);
     setFilteredTimeSlots([]);
     setDoctorsForSelectedDate([]);
     setSelectedDate("");
     setSelectedDoctorID("");
-    setSelectedDoctorName("");
     setSelectedSlotId("");
   }
 
@@ -168,6 +165,10 @@ const Chatbox = (props) => {
       patientAppointments.push(data);
     });
     return patientAppointments;
+  }
+
+  const dateMatcher = (date) => {
+    return !enabledDates.includes(moment(date).format('YYYY-MM-DD'));
   }
 
   const fetchChatbotMessage = async (message) => {
@@ -263,6 +264,7 @@ const Chatbox = (props) => {
       let enabledDates = await fetchAvailableDates();
       setIsBookingAppointment(true);
       setEnabledDates(enabledDates);
+      console.log(enabledDates)
       setMessages(prevMessages => {
         return [...prevMessages, { text: "I would be glad to assist you in booking an appointment! What date would you like to book for?", user: "bot", userIntent: "book" }];
       });
@@ -341,7 +343,6 @@ const Chatbox = (props) => {
                     </SelectTrigger>
                     <SelectContent position="popper">
                       {enabledDates.map(date => <SelectItem value={date}>{date}</SelectItem>)}
-                      {/* {doctorsForSelectedDate.map(doctor => <SelectItem key={doctor.uid} value={doctor.uid}>{"Dr. " + doctor.firstName + " " + doctor.lastName}</SelectItem>)} */}
                     </SelectContent>
                   </Select>
                 </div>
@@ -408,7 +409,7 @@ const Chatbox = (props) => {
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-[280px] justify-start text-left font-normal",
+                          "justify-start text-left font-normal",
                           !date && "text-muted-foreground"
                         )}
                       >
@@ -418,6 +419,7 @@ const Chatbox = (props) => {
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
                       <Calendar
+                        disabled={dateMatcher}
                         mode="single"
                         selected={date}
                         onSelect={

@@ -106,6 +106,7 @@ const CreateTimeSlot = (props) => {
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button
+                                            disabled={loading}
                                             variant={"outline"}
                                             className={cn(
                                                 "justify-start text-left font-normal",
@@ -131,15 +132,14 @@ const CreateTimeSlot = (props) => {
                                         />
                                     </PopoverContent>
                                 </Popover>
-                                {/* <Input id="name" type='date' placeholder="Date for your slot" min={new Date().toISOString().split('T')[0]} onInput={i => setSlotDate(i.target.value)} /> */}
                             </div>
                             <div className="flex flex-col space-y-1.5">
                                 <Label htmlFor="start-time">Time Slot Start Time</Label>
-                                <Input id="start-time" type='time' value={startTime} className="w-full" placeholder="Start time for your slot" onInput={i => setStartTime(i.target.value)} />
+                                <Input id="start-time" type='time' disabled={loading} value={startTime} className="w-full" placeholder="Start time for your slot" onInput={i => setStartTime(i.target.value)} />
                             </div>
                             <div className="flex flex-col space-y-1.5">
                                 <Label htmlFor="end-time">Time Slot End Time</Label>
-                                <Input id="end-time" type='time' value={endTime} placeholder="End time for your slot" onInput={i => setEndTime(i.target.value)} />
+                                <Input id="end-time" type='time' disabled={loading} value={endTime} placeholder="End time for your slot" onInput={i => setEndTime(i.target.value)} />
                             </div>
                         </div>
                     </form>
