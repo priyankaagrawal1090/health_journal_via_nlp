@@ -102,6 +102,10 @@ const Chatbox = (props) => {
     return selectedDoctorID !== "" && selectedSlotId !== "";
   }
 
+  const validateCancelAppointmentFields = () => {
+    return selectedDate !== "" && selectedSlotId !== "";
+  }
+
   const fetchAvailableDates = async () => {
     const slotDates = [];
     const slotDateQuery = query(collection(db, "Time Slots"));
@@ -327,6 +331,8 @@ const Chatbox = (props) => {
                   <Select onValueChange={
                     (value) => {
                       setSelectedDate(value);
+                      setFilteredTimeSlots([]);
+                      setSelectedSlotId("");
                       console.log(value);
                       console.log(props.userId);
                       socket.emit("selected_cancel_date", { cancelDate: value, patientId: props.userId });
@@ -366,18 +372,26 @@ const Chatbox = (props) => {
                 setIsCancelAppointment(false);
               }
             }>Cancel</Button>
-            <Button onClick={async () => {
-              let selectedSlot = filteredTimeSlots.filter(slot => slot.slotId === selectedSlotId);
-              delete selectedSlot[0]['userId'];
-              await setDoc(doc(db, "Time Slots", selectedSlotId), selectedSlot[0])
-              await deleteDoc(doc(db, "Booked Time Slots", selectedSlotId));
-              setIsCancelAppointment(false);
-              setMessages(prevMessages => {
-                return [...prevMessages, { text: "Thank you for allowing us to help you cancel your appointment! Have a great day!", user: "bot" }];
-              });
-              setUserInput("");
-              resetState();
-            }}>Cancel Appointment</Button>
+            {loading ?
+              <Button disabled>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Please wait
+              </Button> :
+              <Button disabled={!validateCancelAppointmentFields()} onClick={async () => {
+                setLoading(true);
+                let selectedSlot = filteredTimeSlots.filter(slot => slot.slotId === selectedSlotId);
+                delete selectedSlot[0]['userId'];
+                await setDoc(doc(db, "Time Slots", selectedSlotId), selectedSlot[0])
+                await deleteDoc(doc(db, "Booked Time Slots", selectedSlotId));
+                setIsCancelAppointment(false);
+                setMessages(prevMessages => {
+                  return [...prevMessages, { text: "Thank you for allowing us to help you cancel your appointment! Have a great day!", user: "bot" }];
+                });
+                setUserInput("");
+                resetState();
+                setLoading(false);
+              }}>Cancel Appointment</Button>
+            }
           </CardFooter>
         </Card>
       </div>
