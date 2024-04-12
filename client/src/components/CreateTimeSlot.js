@@ -151,7 +151,7 @@ const CreateTimeSlot = (props) => {
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Please wait
                             </Button> :
-                            <Button onClick={handleSubmit} >Create Slot</Button>
+                            <Button onClick={handleSubmit}>Create Slot</Button>
                     }
                 </CardFooter>
             </Card>

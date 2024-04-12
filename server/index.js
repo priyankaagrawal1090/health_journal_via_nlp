@@ -50,9 +50,9 @@ const fetchDoctorById = async (doctorId) => {
     return null;
 }
 
-const fetchSlotsByDoctorID = async (doctorID) => {
+const fetchSlotsByDoctorIDAndDate = async (doctorID, date) => {
     const filteredSlots = [];
-    const slotQuery = query(collection(db, "Time Slots"), where("doctorId", "==", doctorID));
+    const slotQuery = query(collection(db, "Time Slots"), where("doctorId", "==", doctorID), where("slotDate", "==", date));
     const slotQuerySnap = await getDocs(slotQuery);
     slotQuerySnap.forEach((slot) => {
         let data = slot.data();
@@ -108,7 +108,8 @@ io.on("connection", (socket) => {
     });
 
     socket.on("selected_doctor_id", async (data, callback) => {
-        let slots = await fetchSlotsByDoctorID(data.doctorId);
+        let slots = await fetchSlotsByDoctorIDAndDate(data.doctorId, moment(data.selectedDate).format('YYYY-MM-DD'));
+        console.log("OPEN DOCTOR SLOTS: ", slots);
         socket.emit("fetch_doctor_slots", {availableSlots: slots});
     });
 

@@ -74,6 +74,7 @@ const Chatbox = (props) => {
   useEffect(() => {
     socket.on("fetch_doctor_slots", async (data) => {
       setFilteredTimeSlots(data.availableSlots);
+      console.log(filteredTimeSlots);
     })
   }, [socket]);
 
@@ -426,6 +427,9 @@ const Chatbox = (props) => {
                           (date) => {
                             setDate(date);
                             console.log(date);
+                            setSelectedDoctorID("");
+                            setDoctorsForSelectedDate([]);
+                            setSelectedSlotId("");
                             socket.emit("selected_appointment_date", { selectedDate: date });
                           }
                         }
@@ -435,13 +439,15 @@ const Chatbox = (props) => {
                 </div>
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="framework">Doctors</Label>
-                  <Select onValueChange={
-                    (value) => {
-                      setSelectedDoctorID(value);
-                      console.log(value);
-                      socket.emit("selected_doctor_id", { doctorId: value });
-                    }
-                  }>
+                  <Select
+                    value={selectedDoctorID}
+                    onValueChange={
+                      (value) => {
+                        setSelectedDoctorID(value);
+                        console.log(value);
+                        socket.emit("selected_doctor_id", { doctorId: value, selectedDate: date });
+                      }
+                    }>
                     <SelectTrigger id="framework">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
