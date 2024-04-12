@@ -8,7 +8,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, quer
 import Typewriter from "typewriter-effect";
 import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { Loader2, Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "../lib/utils"
 import { Calendar } from "./calendar"
 import {
@@ -58,6 +58,7 @@ const Chatbox = (props) => {
   const [filteredTimeSlots, setFilteredTimeSlots] = useState([]);
   const [doctorsForSelectedDate, setDoctorsForSelectedDate] = useState([]);
   const [date, setDate] = useState(new Date());
+  const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedDoctorID, setSelectedDoctorID] = useState("");
   const [selectedSlotId, setSelectedSlotId] = useState("");
@@ -97,16 +98,8 @@ const Chatbox = (props) => {
     setSelectedSlotId("");
   }
 
-  const fetchBookedTimeSlots = async (slotDate) => {
-    const slots = [];
-    const slotQuery = query(collection(db, "Booked Time Slots"), where("slotDate", "==", slotDate));
-    const slotQuerySnap = await getDocs(slotQuery);
-    slotQuerySnap.forEach((doc) => {
-      let data = doc.data();
-      data.slotId = doc.id;
-      slots.push(data);
-    });
-    return slots;
+  const validateBookAppointmentFields = () => {
+    return selectedDoctorID !== "" && selectedSlotId !== "";
   }
 
   const fetchAvailableDates = async () => {
@@ -360,7 +353,6 @@ const Chatbox = (props) => {
                     </SelectTrigger>
                     <SelectContent position="popper">
                       {filteredTimeSlots.map(slot => <SelectItem value={slot.slotId}>{"Start Time: " + slot.startTime + " End Time: " + slot.endTime}</SelectItem>)}
-                      {/* {doctorsForSelectedDate.map(doctor => <SelectItem key={doctor.uid} value={doctor.uid}>{"Dr. " + doctor.firstName + " " + doctor.lastName}</SelectItem>)} */}
                     </SelectContent>
                   </Select>
                 </div>
@@ -429,6 +421,7 @@ const Chatbox = (props) => {
                             console.log(date);
                             setSelectedDoctorID("");
                             setDoctorsForSelectedDate([]);
+                            setFilteredTimeSlots([]);
                             setSelectedSlotId("");
                             socket.emit("selected_appointment_date", { selectedDate: date });
                           }
@@ -482,26 +475,37 @@ const Chatbox = (props) => {
                 setIsBookingAppointment(false);
               }
             }>Cancel</Button>
-            <Button onClick={async () => {
-              let userId = props.userId
-              let doctorInfo = await fetchDoctorById(selectedDoctorID);
-              let selectedSlot = filteredTimeSlots.filter(slot => {
-                return slot.slotId === selectedSlotId;
-              });
-              selectedSlot[0].userId = userId;
-              // add updated slot to "booked time slots"
-              await setDoc(doc(db, "Booked Time Slots", selectedSlotId), selectedSlot[0])
-              // remove slot from "time slots" collection
-              await deleteDoc(doc(db, "Time Slots", selectedSlotId));
-              resetState();
-              setIsBookingAppointment(false);
-              let updateMessages = [
-                ...messages,
-                { text: `Thank you for booking an appointment! You are all set for your appointment on ${date} with ${"Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName}`, user: "bot" },
-              ];
-              setMessages(updateMessages);
-              setUserInput("");
-            }}>Book Appointment</Button>
+            {loading ?
+              <Button disabled>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Please wait
+              </Button> :
+              <Button
+                disabled={!validateBookAppointmentFields()}
+                onClick={async () => {
+                  setLoading(true);
+                  let userId = props.userId
+                  let doctorInfo = await fetchDoctorById(selectedDoctorID);
+                  let selectedSlot = filteredTimeSlots.filter(slot => {
+                    return slot.slotId === selectedSlotId;
+                  });
+                  selectedSlot[0].userId = userId;
+                  // add updated slot to "booked time slots"
+                  await setDoc(doc(db, "Booked Time Slots", selectedSlotId), selectedSlot[0])
+                  // remove slot from "time slots" collection
+                  await deleteDoc(doc(db, "Time Slots", selectedSlotId));
+                  resetState();
+                  setIsBookingAppointment(false);
+                  let updateMessages = [
+                    ...messages,
+                    { text: `Thank you for booking an appointment! You are all set for your appointment on ${date} with ${"Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName}`, user: "bot" },
+                  ];
+                  setMessages(updateMessages);
+                  setUserInput("");
+                  setLoading(false);
+                }}>Book Appointment</Button>
+            }
+
           </CardFooter>
         </Card>
       </div>
