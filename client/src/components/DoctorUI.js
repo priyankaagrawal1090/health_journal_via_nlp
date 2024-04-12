@@ -65,7 +65,7 @@ export default function DoctorUI() {
             </div>
             <div className="div-chatbox">
               <Routes>
-                <Route path='/create-time-slot' element={<CreateTimeSlot />} />
+                <Route path='/create-time-slot' element={<CreateTimeSlot doctorId={userData.uid} />} />
                 <Route path='/' element={<AppointmentView />} />
                 <Route path='/view-unverified-chatbot' element={<ChatVerificationView />} />
               </Routes>

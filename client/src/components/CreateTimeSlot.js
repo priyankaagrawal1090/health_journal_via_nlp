@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth';
 import { getFirestore, collection, doc, getDoc, addDoc } from 'firebase/firestore';
+import moment from "moment";
+import { format } from "date-fns"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card"
+import { useToast } from "./use-toast"
 import { Button } from "./button"
 import { Input } from "./input"
 import { Label } from "./label"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { cn } from "../lib/utils"
+import { Calendar } from "./calendar"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "./popover"
 
 const firebaseConfig = {
     apiKey: "AIzaSyDvXnjcl4fyhzIXxhN-NSJFom3DLonoih0",
@@ -20,32 +30,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore();
 
-const fetchUserData = async () => {
-    const user = getAuth().currentUser;
-    if (user) {
-        const userDataDocRef = doc(db, "Users", user.uid);
-        const userDataDocSnap = await getDoc(userDataDocRef);
-        if (userDataDocSnap.exists()) {
-            return userDataDocSnap.data();
-        } else {
-            return null;
-        }
-    }
-}
-export default function CreateTimeSlot() {
-    const [userData, setUserData] = useState(null);
+const CreateTimeSlot = (props) => {
     const [slotDate, setSlotDate] = useState(new Date());
-    const [startTime, setStartTime] = useState();
-    const [endTime, setEndTime] = useState();
+    const [startTime, setStartTime] = useState(null);
+    const [endTime, setEndTime] = useState(null);
 
-    useEffect(() => {
-        async function fetchUser() {
-            let data = await fetchUserData();
-            console.log(data);
-            setUserData(data);
-        }
-        fetchUser();
-    }, []);
+    const { toast } = useToast();
+
     const timeDiff = (startTime, endTime) => {
         let start = startTime.split(":");
         let end = endTime.split(":");
@@ -58,25 +49,44 @@ export default function CreateTimeSlot() {
     }
 
     const validateSlot = () => {
+        if(startTime === null || endTime === null) {
+            return false;
+        }
         let timeDifference = timeDiff(startTime, endTime);
         return timeDifference > 15;
     }
 
     const handleSubmit = async () => {
         let isValidated = validateSlot();
-        if (isValidated && userData != null) {
+        if (isValidated) {
             const timeSlotsRef = collection(db, "Time Slots");
-            // const timeSlotsDoctorRef = collection(db, "Users", userData.uid, "Open Time Slots");
             const slotData = {
-                doctorId: userData.uid,
+                doctorId: props.doctorId,
                 slotDate: slotDate,
                 startTime: startTime,
                 endTime: endTime,
             };
-            await addDoc(timeSlotsRef, slotData);
-            // addDoc(timeSlotsDoctorRef, slotData);
+            await addDoc(timeSlotsRef, slotData).then((slotDocRef) => {
+                toast({
+                    title: "Created Time Slot",
+                    description: "Your time slot has successfully been created!",
+                  });
+                setStartTime(null);
+                setEndTime(null);
+            }).catch((error) => {
+                toast({
+                    title: "An error has occurred",
+                    description: "An error has occurred while creating your account. Please try again later",
+                  });                
+            });
+        } else {
+            toast({
+                title: "Please select valid times",
+                description: "Please make sure to select both a start and end time and make sure the end time is at least 15 minutes after the start time.",
+              });               
         }
     }
+
     return (
         <div className='h-screen flex items-center justify-center'>
             <Card className="w-[400px]">
@@ -89,15 +99,43 @@ export default function CreateTimeSlot() {
                         <div className="grid w-full items-center gap-4">
                             <div className="flex flex-col space-y-1.5">
                                 <Label htmlFor="name">Time Slot Date</Label>
-                                <Input id="name" type='date' placeholder="Date for your slot" onInput={i => setSlotDate(i.target.value)} />
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "justify-start text-left font-normal",
+                                                !slotDate && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {slotDate ? format(slotDate, "PPP") : <span>Pick a date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={slotDate}
+                                            onSelect={
+                                                (slotDate) => {
+                                                    setSlotDate(moment(slotDate).format('YYYY-MM-DD'));
+                                                }
+                                            }
+                                            disabled={(slotDate) =>
+                                                slotDate < new Date()
+                                            }
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                {/* <Input id="name" type='date' placeholder="Date for your slot" min={new Date().toISOString().split('T')[0]} onInput={i => setSlotDate(i.target.value)} /> */}
                             </div>
                             <div className="flex flex-col space-y-1.5">
                                 <Label htmlFor="start-time">Time Slot Start Time</Label>
-                                <Input id="start-time" type='time' placeholder="Start time for your slot" onInput={i => setStartTime(i.target.value)}  />
+                                <Input id="start-time" type='time' className="w-full" placeholder="Start time for your slot" onInput={i => setStartTime(i.target.value)} />
                             </div>
                             <div className="flex flex-col space-y-1.5">
                                 <Label htmlFor="end-time">Time Slot End Time</Label>
-                                <Input id="end-time" type='time' placeholder="End time for your slot" onInput={i => setEndTime(i.target.value)}  />
+                                <Input id="end-time" type='time' placeholder="End time for your slot" onInput={i => setEndTime(i.target.value)} />
                             </div>
                         </div>
                     </form>
@@ -109,3 +147,5 @@ export default function CreateTimeSlot() {
         </div>
     )
 }
+
+export default CreateTimeSlot;

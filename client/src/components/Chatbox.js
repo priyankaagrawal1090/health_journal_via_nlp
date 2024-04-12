@@ -2,11 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from 'axios';
 import { io } from 'socket.io-client'
 import "../App.css";
-import moment from "moment";
 import { initializeApp } from 'firebase/app'
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where } from 'firebase/firestore';
 import Typewriter from "typewriter-effect";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
