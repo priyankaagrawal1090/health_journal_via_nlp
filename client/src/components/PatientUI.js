@@ -1,9 +1,9 @@
-import React, { useState, Component, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app'
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import ClimbingBoxLoader from "react-spinners/ClimbingBoxLoader";
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import ClipLoader from "react-spinners/ClipLoader";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "./use-toast"
 import { PatientSidebar } from "./Navbar";
 import Chatbox from "./Chatbox"
 import '../App.css'
@@ -22,6 +22,7 @@ const PatientUI = () => {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [userData, setUserData] = useState(null);
   const [showLoading, setShowLoading] = useState(true);
 
@@ -35,30 +36,34 @@ const PatientUI = () => {
       }
     });
   }, []);
-  
-  if (userData) {
-    return (
-      <div className="div-patientUI">
-        {
-          showLoading ?
-            <div className='flex h-screen justify-center items-center'>
-              <ClimbingBoxLoader
-                size={30}
-                color={"#334155"}
-                loading={showLoading}
-              />
-            </div> :
-            <div>
-              <PatientSidebar userEmail={userData.email} />
-              <Chatbox userId={userData.uid} />
-            </div>
-        }
 
-      </div>
-    );
-  } else {
-    navigate("/auth");
-  }
+  return (
+    <div className="div-patientUI">
+      {
+        showLoading ?
+          <div className='flex h-screen justify-center items-center'>
+            <ClipLoader
+              size={30}
+              color={"#334155"}
+              loading={showLoading}
+            />
+          </div> :
+          <div>
+            <PatientSidebar userEmail={userData.email} logOut={() => {
+              signOut(auth).then(() => {
+                navigate("/auth");
+              }).catch((error) => {
+                toast({
+                  title: "An error has occurred",
+                  description: "An error has occurred while signing you out.",
+                });
+              });
+            }} />
+            <Chatbox userId={userData.uid} />
+          </div>
+      }
+    </div>
+  );
 
 }
 
