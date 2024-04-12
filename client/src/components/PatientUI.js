@@ -1,7 +1,9 @@
 import React, { useState, Component, useEffect } from 'react';
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import ClimbingBoxLoader from "react-spinners/ClimbingBoxLoader";
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { useNavigate } from "react-router-dom";
 import { PatientSidebar } from "./Navbar";
 import Chatbox from "./Chatbox"
 import '../App.css'
@@ -16,43 +18,48 @@ const firebaseConfig = {
   measurementId: "G-7V9YPQPLEP"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore();
-
-const fetchUserData = async () => {
-  const user = getAuth().currentUser;
-  if (user) {
-    const userDataDocRef = doc(db, "Users", user.uid);
-    const userDataDocSnap = await getDoc(userDataDocRef);
-    if (userDataDocSnap.exists()) {
-      return userDataDocSnap.data();
-    } else {
-      return null;
-    }
-  }
-}
-export default function PatientUI() {
+const PatientUI = () => {
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth();
+  const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
+  const [showLoading, setShowLoading] = useState(true);
+
   useEffect(() => {
-    async function fetchData() {
-      let data = await fetchUserData();
-      setUserData(data);
-    }
-    fetchData();
+    onAuthStateChanged(auth, (user) => {
+      setShowLoading(false);
+      if (user) {
+        setUserData(user);
+      } else {
+        navigate("/auth");
+      }
+    });
   }, []);
-  if (userData != null) {
-    console.log("USER DATA:", userData);
+  
+  if (userData) {
     return (
       <div className="div-patientUI">
-        <PatientSidebar userEmail={userData.email} />
-        <Chatbox userId={userData.uid} />
+        {
+          showLoading ?
+            <div className='flex h-screen justify-center items-center'>
+              <ClimbingBoxLoader
+                size={30}
+                color={"#334155"}
+                loading={showLoading}
+              />
+            </div> :
+            <div>
+              <PatientSidebar userEmail={userData.email} />
+              <Chatbox userId={userData.uid} />
+            </div>
+        }
+
       </div>
     );
   } else {
-    return (
-      <div className="div-patientUI">
-        <p>Not signed in...</p>
-      </div>
-    )
+    navigate("/auth");
   }
+
 }
+
+export default PatientUI;
