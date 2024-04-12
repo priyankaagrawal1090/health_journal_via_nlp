@@ -28,42 +28,38 @@ const checkEmail = (email) => {
   return emailExp.test(email);
 }
 
-// const signIn = async (db, auth, email, password) => {
-//   const userCredentials = await signInWithEmailAndPassword(auth, email, password);
-//   const user = userCredentials.user;
-//   const userDocRef = doc(db, "Users", user.uid);
-//   const userDocSnap = await getDoc(userDocRef);
-//   const userData = userDocSnap.data();
-//   return userData.userType;
-// }
+const checkPhone = (phone) => {
+  let phoneExp = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+  return phoneExp.test(phone);
+}
 
-const signUp = async (db, auth, email, pNum, fName, lName, gender, password, confPassword, accType) => {
-  if (password == confPassword) {
-    createUserWithEmailAndPassword(auth, email, password).then(async userCredential => {
-      const user = userCredential.user;
-      const usersRef = doc(db, "Users", user.uid);
-      const userData = {
-        uid: user.uid,
-        email: email,
-        pNum: pNum,
-        gender: gender,
-        firstName: fName,
-        lastName: lName,
-        userType: accType,
-      };
-      await setDoc(usersRef, userData);
-      return true;
-    }).catch(err => {
-      const errCode = err.code;
-      const errMessage = err.message;
-      console.log("Error Code: " + errCode);
-      console.log("Error Message: " + errMessage);
-      return false;
-    });
-  } else {
-    console.log("PASSWORDS DONT MATCH");
+const checkEmpty = (input) => {
+  console.log(input.trim() !== "");
+  return input.trim() !== "";
+}
+
+const signUp = async (db, auth, email, pNum, fName, lName, gender, password, accType) => {
+  createUserWithEmailAndPassword(auth, email, password).then(async userCredential => {
+    const user = userCredential.user;
+    const usersRef = doc(db, "Users", user.uid);
+    const userData = {
+      uid: user.uid,
+      email: email,
+      pNum: pNum,
+      gender: gender,
+      firstName: fName,
+      lastName: lName,
+      userType: accType,
+    };
+    await setDoc(usersRef, userData);
+    return true;
+  }).catch(err => {
+    const errCode = err.code;
+    const errMessage = err.message;
+    console.log("Error Code: " + errCode);
+    console.log("Error Message: " + errMessage);
     return false;
-  }
+  });
 }
 
 const Auth = () => {
@@ -116,7 +112,6 @@ const Auth = () => {
               <CardFooter>
                 <Button onClick={async () => {
                   let validateEmail = checkEmail(userSignInEmail);
-                  console.log(validateEmail)
                   if (validateEmail) {
                     signInWithEmailAndPassword(auth, userSignInEmail, userSignInPassword).then(async (userCredential) => {
                       const user = userCredential.user;
@@ -129,7 +124,7 @@ const Auth = () => {
                         navigate("/doctor-ui");
                       }
                     }).catch((error) => {
-                      if(error.code === "auth/invalid-credential") {
+                      if (error.code === "auth/invalid-credential") {
                         toast({
                           title: "Invalid email or password",
                           description: "The email and password you entered do not exist",
@@ -138,7 +133,7 @@ const Auth = () => {
                         toast({
                           title: "An error has occurred",
                           description: "An error has occurred while signing in. Please try again later",
-                        });                        
+                        });
                       }
                     });
                   } else {
@@ -161,16 +156,16 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1 grid gap-2">
-                  <Label htmlFor="user-reg-email">Email</Label>
-                  <Input id="user-reg-email" type="email" onInput={i => { setUserRegEmail(i.target.value) }} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1 grid gap-2">
+                    <Label htmlFor="user-reg-email">Email</Label>
+                    <Input id="user-reg-email" type="email" onInput={i => { setUserRegEmail(i.target.value) }} />
+                  </div>
+                  <div className="space-y-1 grid gap-2">
+                    <Label htmlFor="user-reg-phone">Phone Number</Label>
+                    <Input id="user-reg-phone" type="tel" onInput={i => { setUserPhoneNum(i.target.value) }} />
+                  </div>
                 </div>
-                <div className="space-y-1 grid gap-2">
-                  <Label htmlFor="user-reg-phone">Phone Number</Label>
-                  <Input id="user-reg-phone" type="tel" onInput={i => { setUserPhoneNum(i.target.value) }} />
-                </div>
-              </div>
                 <div className="space-y-1">
                   <Label htmlFor="user-reg-fname">First Name</Label>
                   <Input id="user-reg-fname" type="text" onInput={i => { setUserFirstName(i.target.value) }} />
@@ -224,12 +219,77 @@ const Auth = () => {
               <CardFooter>
                 <Button onClick={async () => {
                   // TODO: validate register form fields
-                  const signUpSuccess = await signUp(db, auth, userRegEmail, userPhoneNum, userFirstName, userLastName, userGender, userRegPassword, userRegConfPassword, userAccType);
-                  if (signUpSuccess) {
-                    if (userAccType == "patient") {
-                      navigate("/patient-ui");
+                  let emailEmpty = checkEmpty(userRegEmail);
+                  let phoneEmpty = checkEmpty(userPhoneNum);
+                  let fNameEmpty = checkEmpty(userFirstName);
+                  let lNameEmpty = checkEmpty(userLastName);
+                  let genderEmpty = checkEmpty(userGender);
+                  let accEmpty = checkEmpty(userAccType);
+                  let pwrdEmpty = checkEmpty(userRegPassword);
+                  let pwrdConfEmpty = checkEmpty(userRegConfPassword);
+                  console.log(emailEmpty)
+                  if (!emailEmpty || !phoneEmpty || !fNameEmpty || !lNameEmpty || !genderEmpty || !accEmpty || !pwrdEmpty || !pwrdConfEmpty) {
+                    toast({
+                      title: "Please make sure all fields are filled out",
+                      description: "Please fill out every field in the register form",
+                    });
+                  } else {
+                    let validateEmail = checkEmail(userRegEmail);
+                    let validatePhone = checkPhone(userPhoneNum);
+
+                    if (!validateEmail) {
+                      toast({
+                        title: "Please enter a valid email address",
+                        description: "The email address you have entered is not properly formatted",
+                      });
+                    } else if (!validatePhone) {
+                      toast({
+                        title: "Please enter a valid phone number",
+                        description: "The phone number you have entered is not properly formatted",
+                      });
+                    } else if (userRegPassword !== userRegConfPassword) {
+                      toast({
+                        title: "Passwords do not match",
+                        description: "Please make sure both passwords match",
+                      });
                     } else {
-                      navigate("/doctor-ui");
+                      createUserWithEmailAndPassword(auth, userRegEmail, userRegPassword).then(async (userCredential) => {
+                        const user = userCredential.user;
+                        const usersRef = doc(db, "Users", user.uid);
+                        const userData = {
+                          uid: user.uid,
+                          email: userRegEmail,
+                          pNum: userPhoneNum,
+                          gender: userGender,
+                          firstName: userFirstName,
+                          lastName: userLastName,
+                          userType: userAccType,
+                        };
+                        await setDoc(usersRef, userData);
+                        if (userAccType == "patient") {
+                          navigate("/patient-ui");
+                        } else {
+                          navigate("/doctor-ui");
+                        }
+                      }).catch((error) => {
+                        console.log(error)
+                        if (error.code === "auth/weak-password") {
+                          toast({
+                            title: "Weak password",
+                            description: "Please make sure your password is at least 6 characters long",
+                          });
+                        } else if (error.code === "auth/email-already-in-use") {
+                          toast({
+                            title: "Email already in use",
+                            description: "There is an existing account with the email address you have entered. Please enter a new email address.",
+                          });
+                        } else {
+                          toast({
+                            title: "An error has occurred",
+                            description: "An error has occurred while creating your account. Please try again later",
+                          });
+                        }
+                      });
                     }
                   }
                 }}>Create Account</Button>
