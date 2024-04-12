@@ -1,14 +1,10 @@
 import React from "react";
-import Home from "./components/Home";
-// import "font-awesome/css/font-awesome.min.css";
-// import "bootstrap/dist/css/bootstrap.css";
 import PatientUI from "./components/PatientUI";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import DoctorUI from "./components/DoctorUI";
-import BookingAppointmentUI from "./components/BookingAppointmentUI";
-import SignIn from "./components/SignIn";
 import Auth from "./components/Auth";
 import About from "./components/About";
+import { Toaster } from "./components/toaster";
 
 function App() {
   document.body.classList.add("dark");
@@ -23,6 +19,7 @@ function App() {
           <Route path="/doctor-ui/*" element={<DoctorUI />} />
         </Routes>
       </Router>
+      <Toaster />
     </div>
   );
 }

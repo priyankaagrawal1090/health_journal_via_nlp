@@ -2,6 +2,7 @@ import { Button } from "./button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card"
 import { Input } from "./input"
 import { Label } from "./label"
+import { useToast } from "./use-toast"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./select"
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs"
@@ -22,14 +23,19 @@ const firebaseConfig = {
   measurementId: "G-7V9YPQPLEP",
 };
 
-const signIn = async (db, auth, email, password) => {
-  const userCredentials = await signInWithEmailAndPassword(auth, email, password);
-  const user = userCredentials.user;
-  const userDocRef = doc(db, "Users", user.uid);
-  const userDocSnap = await getDoc(userDocRef);
-  const userData = userDocSnap.data();
-  return userData.userType;
+const checkEmail = (email) => {
+  let emailExp = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return emailExp.test(email);
 }
+
+// const signIn = async (db, auth, email, password) => {
+//   const userCredentials = await signInWithEmailAndPassword(auth, email, password);
+//   const user = userCredentials.user;
+//   const userDocRef = doc(db, "Users", user.uid);
+//   const userDocSnap = await getDoc(userDocRef);
+//   const userData = userDocSnap.data();
+//   return userData.userType;
+// }
 
 const signUp = async (db, auth, email, pNum, fName, lName, gender, password, confPassword, accType) => {
   if (password == confPassword) {
@@ -61,13 +67,12 @@ const signUp = async (db, auth, email, pNum, fName, lName, gender, password, con
 }
 
 const Auth = () => {
+  const { toast } = useToast();
+
   const app = initializeApp(firebaseConfig);
   const db = useFirebase();
   const auth = getAuth();
   const navigate = useNavigate();
-
-  const [isRegistered, setIsRegistered] = React.useState(true);
-  const [isSignedIn, setIsSignedIn] = React.useState(false);
 
   const [userSignInEmail, setUserSignInEmail] = React.useState("");
   const [userSignInPassword, setUserSignInPassword] = React.useState("");
@@ -80,7 +85,6 @@ const Auth = () => {
   const [userAccType, setUserAccType] = React.useState("");
   const [userRegPassword, setUserRegPassword] = React.useState("");
   const [userRegConfPassword, setUserRegConfPassword] = React.useState("");
-
 
   return (
     <div>
@@ -102,7 +106,7 @@ const Auth = () => {
               <CardContent className="space-y-2">
                 <div className="space-y-1">
                   <Label htmlFor="user-email">Email</Label>
-                  <Input id="user-email" onInput={i => { setUserSignInEmail(i.target.value) }} />
+                  <Input id="user-email" type="email" onInput={i => { setUserSignInEmail(i.target.value) }} />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="password">Password</Label>
@@ -111,13 +115,39 @@ const Auth = () => {
               </CardContent>
               <CardFooter>
                 <Button onClick={async () => {
-                  const userType = await signIn(db, auth, userSignInEmail, userSignInPassword);
-                  console.log(userType)
-                  if (userType == "patient") {
-                    navigate("/patient-ui");
+                  let validateEmail = checkEmail(userSignInEmail);
+                  console.log(validateEmail)
+                  if (validateEmail) {
+                    signInWithEmailAndPassword(auth, userSignInEmail, userSignInPassword).then(async (userCredential) => {
+                      const user = userCredential.user;
+                      const userDocRef = doc(db, "Users", user.uid);
+                      const userDocSnap = await getDoc(userDocRef);
+                      const userData = userDocSnap.data();
+                      if (userData.userType == "patient") {
+                        navigate("/patient-ui");
+                      } else {
+                        navigate("/doctor-ui");
+                      }
+                    }).catch((error) => {
+                      if(error.code === "auth/invalid-credential") {
+                        toast({
+                          title: "Invalid email or password",
+                          description: "The email and password you entered do not exist",
+                        })
+                      } else {
+                        toast({
+                          title: "An error has occurred",
+                          description: "An error has occurred while signing in. Please try again later",
+                        });                        
+                      }
+                    });
                   } else {
-                    navigate("/doctor-ui");
+                    toast({
+                      title: "Please enter a valid email address",
+                      description: "The email address you have entered is not properly formatted",
+                    });
                   }
+
                 }}>Sign In</Button>
               </CardFooter>
             </Card>
