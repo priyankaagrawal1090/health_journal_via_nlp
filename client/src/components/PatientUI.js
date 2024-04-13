@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Route, Routes } from "react-router-dom";
 import { initializeApp } from 'firebase/app'
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import ClipLoader from "react-spinners/ClipLoader";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./use-toast"
 import { PatientSidebar } from "./Navbar";
+import Settings from './Settings';
 import Chatbox from "./Chatbox"
 import '../App.css'
 
@@ -59,7 +61,11 @@ const PatientUI = () => {
                 });
               });
             }} />
-            <Chatbox userId={userData.uid} />
+
+            <Routes>
+              <Route path='/' element={<Chatbox userId={userData.uid} />} />
+              <Route path='/settings' element={<Settings />} />
+            </Routes>
           </div>
       }
     </div>

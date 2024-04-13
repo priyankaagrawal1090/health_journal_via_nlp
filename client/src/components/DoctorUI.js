@@ -7,6 +7,7 @@ import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./use-toast";
 import AppointmentView from './AppointmentView';
+import Settings from './Settings';
 import ChatVerificationView from './ChatVerificationView';
 import CreateTimeSlot from './CreateTimeSlot';
 
@@ -50,8 +51,8 @@ export default function DoctorUI() {
               loading={showLoading}
             />
           </div> :
-          <div>
-            <div className="div-sidebar">
+          <div className='h-screen relative'>
+            {/* <div className="absolute div-sidebar"> */}
               <DoctorSidebar userEmail={userData.email} logOut={() => {
                 signOut(auth).then(() => {
                   navigate("/auth");
@@ -62,14 +63,15 @@ export default function DoctorUI() {
                   });
                 });
               }} />
-            </div>
-            <div className="div-chatbox">
+            {/* </div> */}
+            {/* <div className="absolute float-right div-doctor"> */}
               <Routes>
-                <Route path='/create-time-slot' element={<CreateTimeSlot doctorId={userData.uid} />} />
                 <Route path='/' element={<AppointmentView />} />
                 <Route path='/view-unverified-chatbot' element={<ChatVerificationView />} />
+                <Route path='/create-time-slot' element={<CreateTimeSlot doctorId={userData.uid} />} />
+                <Route path='/settings' element={<Settings />} />
               </Routes>
-            </div>
+            {/* </div> */}
           </div>
       }
 
