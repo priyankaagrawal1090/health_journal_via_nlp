@@ -64,7 +64,7 @@ const PatientUI = () => {
 
             <Routes>
               <Route path='/' element={<Chatbox userId={userData.uid} />} />
-              <Route path='/settings' element={<Settings />} />
+              <Route path='/settings' element={<Settings userId={userData.uid} />} />
             </Routes>
           </div>
       }

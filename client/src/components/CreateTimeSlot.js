@@ -3,13 +3,12 @@ import { initializeApp } from 'firebase/app'
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import moment from "moment";
 import { format } from "date-fns"
-import { Loader2 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card"
 import { useToast } from "./use-toast"
 import { Button } from "./button"
 import { Input } from "./input"
 import { Label } from "./label"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { Loader2, Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "../lib/utils"
 import { Calendar } from "./calendar"
 import {
