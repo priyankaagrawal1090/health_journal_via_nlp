@@ -2,6 +2,15 @@ import { Button } from "./button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card"
 import { Input } from "./input"
 import { Label } from "./label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./dialog"
 import { useToast } from "./use-toast"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./select"
 import { useNavigate } from "react-router-dom";
@@ -9,10 +18,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs"
 import { useFirebase } from "./FirebaseContext";
 import { initializeApp } from "firebase/app";
 import { Loader2 } from "lucide-react"
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, getAdditionalUserInfo } from "firebase/auth";
+import { doc, getDoc, getFirestore, setDoc } from "firebase/firestore";
 import Topnav from "./Topnav";
 import * as React from "react";
+import { Separator } from "./separator"
 
 const firebaseConfig = {
   apiKey: "AIzaSyDvXnjcl4fyhzIXxhN-NSJFom3DLonoih0",
@@ -39,42 +49,22 @@ const checkEmpty = (input) => {
   return input.trim() !== "";
 }
 
-const signUp = async (db, auth, email, pNum, fName, lName, gender, password, accType) => {
-  createUserWithEmailAndPassword(auth, email, password).then(async userCredential => {
-    const user = userCredential.user;
-    const usersRef = doc(db, "Users", user.uid);
-    const userData = {
-      uid: user.uid,
-      email: email,
-      pNum: pNum,
-      gender: gender,
-      firstName: fName,
-      lastName: lName,
-      userType: accType,
-    };
-    await setDoc(usersRef, userData);
-    return true;
-  }).catch(err => {
-    const errCode = err.code;
-    const errMessage = err.message;
-    console.log("Error Code: " + errCode);
-    console.log("Error Message: " + errMessage);
-    return false;
-  });
-}
-
 const Auth = () => {
   const { toast } = useToast();
 
   const app = initializeApp(firebaseConfig);
-  const db = useFirebase();
+  const db = getFirestore();
   const auth = getAuth();
+  const googleProvider = new GoogleAuthProvider();
   const navigate = useNavigate();
 
   const [userSignInEmail, setUserSignInEmail] = React.useState("");
   const [userSignInPassword, setUserSignInPassword] = React.useState("");
 
-  const [loading, setLoading] = React.useState(false);
+  const [showDialog, setShowDialog] = React.useState(false);
+
+  const [registerLoading, setRegisterLoading] = React.useState(false);
+  const [signInLoading, setSignInLoading] = React.useState(false);
 
   const [userRegEmail, setUserRegEmail] = React.useState("");
   const [userPhoneNum, setUserPhoneNum] = React.useState("");
@@ -103,24 +93,67 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
+                <div className="grid grid-cols-2 gap-6">
+                  <Button className="font-bold">
+                    Other
+                  </Button>
+                  <Button onClick={() => {
+                    signInWithPopup(auth, googleProvider).then(async (userCredential) => {
+                      let { isNewUser } = getAdditionalUserInfo(userCredential);
+                      if (isNewUser) {
+                        setShowDialog(true);
+                      } else {
+                        let userDataRef = doc(db, "Users", userCredential.user.uid);
+                        let userDataSnap = await getDoc(userDataRef);
+                        let userData = userDataSnap.data();
+                        if (userData.userType == "patient") {
+                          navigate("/patient-ui");
+                        } else {
+                          navigate("/doctor-ui");
+                        }
+                      }
+                    }).catch((error) => {
+                      console.log(error);
+                      toast({
+                        title: "An error has occurred",
+                        description: "An error has occurred while signing in. Please try again later",
+                      });
+                    })
+                  }} className="font-bold">
+                    <svg role="img" viewBox="0 0 24 24" class="mr-2 h-4 w-4">
+                      <path fill="currentColor" d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"></path>
+                    </svg>
+                    Google
+                  </Button>
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <Separator />
+                  </div>
+                  <div class="relative flex justify-center text-xs uppercase">
+                    <span class="bg-background px-2 text-muted-foreground">OR</span>
+                  </div>
+                </div>
+
+                <Separator />
                 <div className="space-y-1">
                   <Label htmlFor="user-email">Email</Label>
-                  <Input id="user-email" type="email" disabled={loading} onInput={i => { setUserSignInEmail(i.target.value) }} />
+                  <Input id="user-email" type="email" disabled={signInLoading} onInput={i => { setUserSignInEmail(i.target.value) }} />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" disabled={loading} onInput={i => { setUserSignInPassword(i.target.value) }} />
+                  <Input id="password" type="password" disabled={signInLoading} onInput={i => { setUserSignInPassword(i.target.value) }} />
                 </div>
               </CardContent>
               <CardFooter>
                 {
-                  loading ?
+                  signInLoading ?
                     <Button disabled>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Please wait
                     </Button> :
-                    <Button onClick={async () => {
-                      setLoading(true);
+                    <Button className="w-full" onClick={async () => {
+                      setSignInLoading(true);
                       let validateEmail = checkEmail(userSignInEmail);
                       if (validateEmail) {
                         signInWithEmailAndPassword(auth, userSignInEmail, userSignInPassword).then(async (userCredential) => {
@@ -128,7 +161,7 @@ const Auth = () => {
                           const userDocRef = doc(db, "Users", user.uid);
                           const userDocSnap = await getDoc(userDocRef);
                           const userData = userDocSnap.data();
-                          setLoading(false);
+                          setSignInLoading(false);
                           if (userData.userType == "patient") {
                             navigate("/patient-ui");
                           } else {
@@ -230,13 +263,13 @@ const Auth = () => {
               </CardContent>
               <CardFooter>
                 {
-                  loading ?
+                  registerLoading ?
                     <Button disabled>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Please wait
                     </Button> :
-                    <Button onClick={async () => {
-                      setLoading(true);
+                    <Button className="w-full" onClick={async () => {
+                      setRegisterLoading(true);
                       let emailEmpty = checkEmpty(userRegEmail);
                       let phoneEmpty = checkEmpty(userPhoneNum);
                       let fNameEmpty = checkEmpty(userFirstName);
@@ -284,7 +317,7 @@ const Auth = () => {
                               userType: userAccType,
                             };
                             await setDoc(usersRef, userData);
-                            setLoading(false);
+                            setRegisterLoading(false);
                             if (userAccType == "patient") {
                               navigate("/patient-ui");
                             } else {
@@ -317,6 +350,115 @@ const Auth = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        <Dialog open={showDialog}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Enter your details</DialogTitle>
+              <DialogDescription>
+                Please fill out the details below to finish creating your account.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  First Name
+                </Label>
+                <Input
+                  id="name"
+                  value={userFirstName}
+                  onInput={i => { setUserFirstName(i.target.value) }}
+                  placeholder="First name"
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="username" className="text-right">
+                  Last Name
+                </Label>
+                <Input
+                  id="username"
+                  value={userLastName}
+                  onInput={i => { setUserLastName(i.target.value) }}
+                  placeholder="Last name"
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="phone" className="text-right">
+                  Phone Number
+                </Label>
+                <Input
+                  id="username"
+                  value={userPhoneNum}
+                  onInput={i => { setUserPhoneNum(i.target.value) }}
+                  placeholder="Phone Number"
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="user-reg-gender" className="text-right">Gender</Label>
+                <Select onValueChange={(gender) => { setUserGender(gender) }}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Choose an option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="man">Man</SelectItem>
+                      <SelectItem value="woman">Woman</SelectItem>
+                      <SelectItem value="nonbinary">Non-binary</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="na">Prefer not to say</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="user-reg-acc-type" className="text-right">Account Type</Label>
+                <Select onValueChange={(accType) => { setUserAccType(accType) }}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Choose an option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="patient">Patient</SelectItem>
+                      <SelectItem value="doctor">Doctor</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              {
+                registerLoading ?
+                  <Button disabled>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Please wait
+                  </Button> :
+                  <Button onClick={async () => {
+                    setRegisterLoading(true);
+                    let user = auth.currentUser;
+                    let usersRef = doc(db, "Users", user.uid);
+                    let userData = {
+                      uid: user.uid,
+                      email: user.email,
+                      pNum: userPhoneNum,
+                      gender: userGender,
+                      firstName: userFirstName,
+                      lastName: userLastName,
+                      userType: userAccType,
+                    };
+                    await setDoc(usersRef, userData);
+                    setRegisterLoading(false);
+                    if (userAccType == "patient") {
+                      navigate("/patient-ui");
+                    } else {
+                      navigate("/doctor-ui");
+                    }
+                  }} type="submit">Create Account</Button>
+              }
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
