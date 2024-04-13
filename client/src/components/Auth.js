@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs"
 import { useFirebase } from "./FirebaseContext";
 import { initializeApp } from "firebase/app";
+import { Loader2 } from "lucide-react"
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import Topnav from "./Topnav";
@@ -73,6 +74,8 @@ const Auth = () => {
   const [userSignInEmail, setUserSignInEmail] = React.useState("");
   const [userSignInPassword, setUserSignInPassword] = React.useState("");
 
+  const [loading, setLoading] = React.useState(false);
+
   const [userRegEmail, setUserRegEmail] = React.useState("");
   const [userPhoneNum, setUserPhoneNum] = React.useState("");
   const [userFirstName, setUserFirstName] = React.useState("");
@@ -102,48 +105,57 @@ const Auth = () => {
               <CardContent className="space-y-2">
                 <div className="space-y-1">
                   <Label htmlFor="user-email">Email</Label>
-                  <Input id="user-email" type="email" onInput={i => { setUserSignInEmail(i.target.value) }} />
+                  <Input id="user-email" type="email" disabled={loading} onInput={i => { setUserSignInEmail(i.target.value) }} />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" onInput={i => { setUserSignInPassword(i.target.value) }} />
+                  <Input id="password" type="password" disabled={loading} onInput={i => { setUserSignInPassword(i.target.value) }} />
                 </div>
               </CardContent>
               <CardFooter>
-                <Button onClick={async () => {
-                  let validateEmail = checkEmail(userSignInEmail);
-                  if (validateEmail) {
-                    signInWithEmailAndPassword(auth, userSignInEmail, userSignInPassword).then(async (userCredential) => {
-                      const user = userCredential.user;
-                      const userDocRef = doc(db, "Users", user.uid);
-                      const userDocSnap = await getDoc(userDocRef);
-                      const userData = userDocSnap.data();
-                      if (userData.userType == "patient") {
-                        navigate("/patient-ui");
+                {
+                  loading ?
+                    <Button disabled>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Please wait
+                    </Button> :
+                    <Button onClick={async () => {
+                      setLoading(true);
+                      let validateEmail = checkEmail(userSignInEmail);
+                      if (validateEmail) {
+                        signInWithEmailAndPassword(auth, userSignInEmail, userSignInPassword).then(async (userCredential) => {
+                          const user = userCredential.user;
+                          const userDocRef = doc(db, "Users", user.uid);
+                          const userDocSnap = await getDoc(userDocRef);
+                          const userData = userDocSnap.data();
+                          setLoading(false);
+                          if (userData.userType == "patient") {
+                            navigate("/patient-ui");
+                          } else {
+                            navigate("/doctor-ui");
+                          }
+                        }).catch((error) => {
+                          if (error.code === "auth/invalid-credential") {
+                            toast({
+                              title: "Invalid email or password",
+                              description: "The email and password you entered do not exist",
+                            })
+                          } else {
+                            toast({
+                              title: "An error has occurred",
+                              description: "An error has occurred while signing in. Please try again later",
+                            });
+                          }
+                        });
                       } else {
-                        navigate("/doctor-ui");
-                      }
-                    }).catch((error) => {
-                      if (error.code === "auth/invalid-credential") {
                         toast({
-                          title: "Invalid email or password",
-                          description: "The email and password you entered do not exist",
-                        })
-                      } else {
-                        toast({
-                          title: "An error has occurred",
-                          description: "An error has occurred while signing in. Please try again later",
+                          title: "Please enter a valid email address",
+                          description: "The email address you have entered is not properly formatted",
                         });
                       }
-                    });
-                  } else {
-                    toast({
-                      title: "Please enter a valid email address",
-                      description: "The email address you have entered is not properly formatted",
-                    });
-                  }
 
-                }}>Sign In</Button>
+                    }}>Sign In</Button>
+                }
               </CardFooter>
             </Card>
           </TabsContent>
@@ -217,82 +229,90 @@ const Auth = () => {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button onClick={async () => {
-                  // TODO: validate register form fields
-                  let emailEmpty = checkEmpty(userRegEmail);
-                  let phoneEmpty = checkEmpty(userPhoneNum);
-                  let fNameEmpty = checkEmpty(userFirstName);
-                  let lNameEmpty = checkEmpty(userLastName);
-                  let genderEmpty = checkEmpty(userGender);
-                  let accEmpty = checkEmpty(userAccType);
-                  let pwrdEmpty = checkEmpty(userRegPassword);
-                  let pwrdConfEmpty = checkEmpty(userRegConfPassword);
-                  console.log(emailEmpty)
-                  if (!emailEmpty || !phoneEmpty || !fNameEmpty || !lNameEmpty || !genderEmpty || !accEmpty || !pwrdEmpty || !pwrdConfEmpty) {
-                    toast({
-                      title: "Please make sure all fields are filled out",
-                      description: "Please fill out every field in the register form",
-                    });
-                  } else {
-                    let validateEmail = checkEmail(userRegEmail);
-                    let validatePhone = checkPhone(userPhoneNum);
+                {
+                  loading ?
+                    <Button disabled>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Please wait
+                    </Button> :
+                    <Button onClick={async () => {
+                      setLoading(true);
+                      let emailEmpty = checkEmpty(userRegEmail);
+                      let phoneEmpty = checkEmpty(userPhoneNum);
+                      let fNameEmpty = checkEmpty(userFirstName);
+                      let lNameEmpty = checkEmpty(userLastName);
+                      let genderEmpty = checkEmpty(userGender);
+                      let accEmpty = checkEmpty(userAccType);
+                      let pwrdEmpty = checkEmpty(userRegPassword);
+                      let pwrdConfEmpty = checkEmpty(userRegConfPassword);
+                      console.log(emailEmpty)
+                      if (!emailEmpty || !phoneEmpty || !fNameEmpty || !lNameEmpty || !genderEmpty || !accEmpty || !pwrdEmpty || !pwrdConfEmpty) {
+                        toast({
+                          title: "Please make sure all fields are filled out",
+                          description: "Please fill out every field in the register form",
+                        });
+                      } else {
+                        let validateEmail = checkEmail(userRegEmail);
+                        let validatePhone = checkPhone(userPhoneNum);
 
-                    if (!validateEmail) {
-                      toast({
-                        title: "Please enter a valid email address",
-                        description: "The email address you have entered is not properly formatted",
-                      });
-                    } else if (!validatePhone) {
-                      toast({
-                        title: "Please enter a valid phone number",
-                        description: "The phone number you have entered is not properly formatted",
-                      });
-                    } else if (userRegPassword !== userRegConfPassword) {
-                      toast({
-                        title: "Passwords do not match",
-                        description: "Please make sure both passwords match",
-                      });
-                    } else {
-                      createUserWithEmailAndPassword(auth, userRegEmail, userRegPassword).then(async (userCredential) => {
-                        const user = userCredential.user;
-                        const usersRef = doc(db, "Users", user.uid);
-                        const userData = {
-                          uid: user.uid,
-                          email: userRegEmail,
-                          pNum: userPhoneNum,
-                          gender: userGender,
-                          firstName: userFirstName,
-                          lastName: userLastName,
-                          userType: userAccType,
-                        };
-                        await setDoc(usersRef, userData);
-                        if (userAccType == "patient") {
-                          navigate("/patient-ui");
-                        } else {
-                          navigate("/doctor-ui");
-                        }
-                      }).catch((error) => {
-                        console.log(error)
-                        if (error.code === "auth/weak-password") {
+                        if (!validateEmail) {
                           toast({
-                            title: "Weak password",
-                            description: "Please make sure your password is at least 6 characters long",
+                            title: "Please enter a valid email address",
+                            description: "The email address you have entered is not properly formatted",
                           });
-                        } else if (error.code === "auth/email-already-in-use") {
+                        } else if (!validatePhone) {
                           toast({
-                            title: "Email already in use",
-                            description: "There is an existing account with the email address you have entered. Please enter a new email address.",
+                            title: "Please enter a valid phone number",
+                            description: "The phone number you have entered is not properly formatted",
+                          });
+                        } else if (userRegPassword !== userRegConfPassword) {
+                          toast({
+                            title: "Passwords do not match",
+                            description: "Please make sure both passwords match",
                           });
                         } else {
-                          toast({
-                            title: "An error has occurred",
-                            description: "An error has occurred while creating your account. Please try again later",
+                          createUserWithEmailAndPassword(auth, userRegEmail, userRegPassword).then(async (userCredential) => {
+                            const user = userCredential.user;
+                            const usersRef = doc(db, "Users", user.uid);
+                            const userData = {
+                              uid: user.uid,
+                              email: userRegEmail,
+                              pNum: userPhoneNum,
+                              gender: userGender,
+                              firstName: userFirstName,
+                              lastName: userLastName,
+                              userType: userAccType,
+                            };
+                            await setDoc(usersRef, userData);
+                            setLoading(false);
+                            if (userAccType == "patient") {
+                              navigate("/patient-ui");
+                            } else {
+                              navigate("/doctor-ui");
+                            }
+                          }).catch((error) => {
+                            console.log(error)
+                            if (error.code === "auth/weak-password") {
+                              toast({
+                                title: "Weak password",
+                                description: "Please make sure your password is at least 6 characters long",
+                              });
+                            } else if (error.code === "auth/email-already-in-use") {
+                              toast({
+                                title: "Email already in use",
+                                description: "There is an existing account with the email address you have entered. Please enter a new email address.",
+                              });
+                            } else {
+                              toast({
+                                title: "An error has occurred",
+                                description: "An error has occurred while creating your account. Please try again later",
+                              });
+                            }
                           });
                         }
-                      });
-                    }
-                  }
-                }}>Create Account</Button>
+                      }
+                    }}>Create Account</Button>
+                }
               </CardFooter>
             </Card>
           </TabsContent>
