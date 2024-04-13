@@ -365,6 +365,7 @@ const Auth = () => {
                 </Label>
                 <Input
                   id="name"
+                  disabled={registerLoading}
                   value={userFirstName}
                   onInput={i => { setUserFirstName(i.target.value) }}
                   placeholder="First name"
@@ -377,6 +378,7 @@ const Auth = () => {
                 </Label>
                 <Input
                   id="username"
+                  disabled={registerLoading}
                   value={userLastName}
                   onInput={i => { setUserLastName(i.target.value) }}
                   placeholder="Last name"
@@ -389,6 +391,7 @@ const Auth = () => {
                 </Label>
                 <Input
                   id="username"
+                  disabled={registerLoading}
                   value={userPhoneNum}
                   onInput={i => { setUserPhoneNum(i.target.value) }}
                   placeholder="Phone Number"
@@ -397,7 +400,7 @@ const Auth = () => {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="user-reg-gender" className="text-right">Gender</Label>
-                <Select onValueChange={(gender) => { setUserGender(gender) }}>
+                <Select disabled={registerLoading} onValueChange={(gender) => { setUserGender(gender) }}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Choose an option" />
                   </SelectTrigger>
@@ -414,7 +417,7 @@ const Auth = () => {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="user-reg-acc-type" className="text-right">Account Type</Label>
-                <Select onValueChange={(accType) => { setUserAccType(accType) }}>
+                <Select disabled={registerLoading} onValueChange={(accType) => { setUserAccType(accType) }}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Choose an option" />
                   </SelectTrigger>
@@ -436,24 +439,45 @@ const Auth = () => {
                   </Button> :
                   <Button onClick={async () => {
                     setRegisterLoading(true);
-                    let user = auth.currentUser;
-                    let usersRef = doc(db, "Users", user.uid);
-                    let userData = {
-                      uid: user.uid,
-                      email: user.email,
-                      pNum: userPhoneNum,
-                      gender: userGender,
-                      firstName: userFirstName,
-                      lastName: userLastName,
-                      userType: userAccType,
-                    };
-                    await setDoc(usersRef, userData);
-                    setRegisterLoading(false);
-                    if (userAccType == "patient") {
-                      navigate("/patient-ui");
+                    let firstNameEmpty = checkEmpty(userFirstName);
+                    let lastNameEmpty = checkEmpty(userLastName);
+                    let phoneEmpty = checkEmpty(userPhoneNum);
+                    let genderEmpty = checkEmpty(userGender);
+                    let userTypeEmpty = checkEmpty(userAccType);
+                    if (!phoneEmpty || !firstNameEmpty || !lastNameEmpty || !genderEmpty || !userTypeEmpty) {
+                      toast({
+                        title: "Please make sure all fields are filled out",
+                        description: "Please fill out every field in the register form",
+                      });
                     } else {
-                      navigate("/doctor-ui");
+                      let validatePhone = checkPhone(userPhoneNum);
+                      if (!validatePhone) {
+                        toast({
+                          title: "Please enter a valid phone number",
+                          description: "The phone number you have entered is not properly formatted",
+                        });
+                      } else {
+                        let user = auth.currentUser;
+                        let usersRef = doc(db, "Users", user.uid);
+                        let userData = {
+                          uid: user.uid,
+                          email: user.email,
+                          pNum: userPhoneNum,
+                          gender: userGender,
+                          firstName: userFirstName,
+                          lastName: userLastName,
+                          userType: userAccType,
+                        };
+                        await setDoc(usersRef, userData);
+                        setRegisterLoading(false);
+                        if (userAccType == "patient") {
+                          navigate("/patient-ui");
+                        } else {
+                          navigate("/doctor-ui");
+                        }
+                      }
                     }
+                    setRegisterLoading(false);
                   }} type="submit">Create Account</Button>
               }
             </DialogFooter>
