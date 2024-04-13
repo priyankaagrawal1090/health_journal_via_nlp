@@ -18,10 +18,19 @@ import {
     SelectTrigger,
     SelectValue,
 } from "./select"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "./dialog"
 import { useToast } from "./use-toast"
 import { Loader2 } from "lucide-react"
 import { doc, getFirestore, updateDoc } from 'firebase/firestore';
-import { getAuth, updateEmail, updatePassword } from 'firebase/auth';
+import { getAuth, reauthenticateWithCredential, signInWithEmailAndPassword, updateEmail, updatePassword, EmailAuthProvider } from 'firebase/auth';
 
 const checkEmail = (email) => {
     let emailExp = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -46,9 +55,12 @@ const Settings = (props) => {
     const [lastName, setLastName] = useState("");
     const [gender, setGender] = useState("");
     const [email, setEmail] = useState("");
+    const [currPassword, setCurrPassword] = useState("");
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
+
     const [loading, setLoading] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     const noChanges = () => {
         return firstName === "" && lastName === "" && gender === "" && email === "" && phone === "" && password === "";
@@ -109,95 +121,145 @@ const Settings = (props) => {
                     </form>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                    {
-                        loading ?
-                            <Button disabled>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Please wait
-                            </Button>
-                            :
-                            <Button disabled={noChanges()} onClick={async () => {
-                                setLoading(true);
-                                let userRef = doc(db, "Users", props.userId);
+                    <Dialog open={dialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" onClick={() => {setDialogOpen(true)}}>Save Changes</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                                <DialogTitle>Please Verify Your Account Details</DialogTitle>
+                                <DialogDescription>
+                                    Sign In to Verify Your Account Changes
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="curr-password" className="text-right">
+                                        Password
+                                    </Label>
+                                    <Input
+                                        value={currPassword}
+                                        id="curr-password"
+                                        type="password"
+                                        placeholder="password"
+                                        onInput={i => { setCurrPassword(i.target.value) }}
+                                        className="col-span-3"
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                {
+                                    loading ?
+                                        <Button disabled>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Please wait
+                                        </Button>
+                                        :
+                                        <Button onClick={async () => {
+                                            setLoading(true);
+                                            if (currPassword !== "") {
+                                                let credential = EmailAuthProvider.credential(auth.currentUser.email, currPassword);
+                                                await reauthenticateWithCredential(auth.currentUser, credential).then(async () => {
+                                                    let userRef = doc(db, "Users", props.userId);
 
-                                let emailNotBlank = (email !== "");
-                                let phoneNotBlank = (phone !== "");
-                                let fNameNotBlank = (firstName !== "");
-                                let lNameNotBlank = (lastName !== "");
-                                let genderNotBlank = (gender !== "");
-                                let passwordNotBlank = (password !== "");
+                                                    let emailNotBlank = (email !== "");
+                                                    let phoneNotBlank = (phone !== "");
+                                                    let fNameNotBlank = (firstName !== "");
+                                                    let lNameNotBlank = (lastName !== "");
+                                                    let genderNotBlank = (gender !== "");
+                                                    let passwordNotBlank = (password !== "");
 
-                                if (emailNotBlank) {
-                                    let verifyEmail = checkEmail(email);
-                                    if (!verifyEmail) {
-                                        toast({
-                                            title: "Please enter a valid email address",
-                                            description: "The email address you have entered is not properly formatted",
-                                        });
-                                    } else {
-                                        updateEmail(auth.currentUser, email).then(async () => {
-                                            await updateDoc(userRef, {
-                                                email: email,
-                                            }).then(() => { }).catch((error) => {
-                                                console.log(error);
-                                                toast({
-                                                    title: "An error has occurred",
-                                                    description: "An error has occurred while updating your email.",
+                                                    if (emailNotBlank) {
+                                                        let verifyEmail = checkEmail(email);
+                                                        if (!verifyEmail) {
+                                                            toast({
+                                                                title: "Please enter a valid email address",
+                                                                description: "The email address you have entered is not properly formatted",
+                                                            });
+                                                        } else {
+                                                            await updateEmail(auth.currentUser, email).then(async () => {
+                                                                await updateDoc(userRef, {
+                                                                    email: email,
+                                                                }).then(() => { }).catch((error) => {
+                                                                    console.log(error);
+                                                                    toast({
+                                                                        title: "An error has occurred",
+                                                                        description: "An error has occurred while updating your email.",
+                                                                    });
+                                                                })
+                                                            }).catch((error) => {
+                                                                console.log(error);
+                                                                toast({
+                                                                    title: "An error has occurred",
+                                                                    description: "An error has occurred while updating your email.",
+                                                                });
+                                                            });
+                                                        }
+                                                    }
+
+                                                    if (phoneNotBlank) {
+                                                        let verifyPhone = checkPhone(phone);
+                                                        if (!verifyPhone) {
+                                                            toast({
+                                                                title: "Please enter a valid phone number",
+                                                                description: "The phone number you have entered is not properly formatted",
+                                                            });
+                                                        } else {
+                                                            await updateDoc(userRef, {
+                                                                pNum: phone,
+                                                            })
+                                                        }
+                                                    }
+
+                                                    if (fNameNotBlank) { await updateDoc(userRef, { firstName: firstName, }); }
+                                                    if (lNameNotBlank) { await updateDoc(userRef, { lastName: lastName, }); }
+                                                    if (genderNotBlank) { await updateDoc(userRef, { gender: gender, }); }
+
+                                                    if (passwordNotBlank) {
+                                                        let verifyPassword = checkPassword(password);
+                                                        if (!verifyPassword) {
+                                                            toast({
+                                                                title: "Strong password required",
+                                                                description: "Please make sure your password is at least 6 characters long",
+                                                            });
+                                                        } else {
+                                                            await updatePassword(auth.currentUser, password).then(() => { }).catch((error) => {
+                                                                toast({
+                                                                    title: "An error has occurred",
+                                                                    description: "An error has occurred while updating your password.",
+                                                                });
+                                                            });
+                                                        }
+                                                    }
+                                                    setFirstName("");
+                                                    setLastName("");
+                                                    setEmail("");
+                                                    setPhone("");
+                                                    setPassword("");
+                                                    setGender("");
+                                                    setCurrPassword("");
+                                                    setLoading(false);
+                                                    setDialogOpen(false);
+                                                }).catch((error) => {
+                                                    console.log(error);
+                                                    toast({
+                                                        title: "An error has occurred",
+                                                        description: "An error has occurred while reauthenticating",
+                                                    });
                                                 });
-                                            })
-                                        }).catch((error) => {
-                                            console.log(error);
-                                            toast({
-                                                title: "An error has occurred",
-                                                description: "An error has occurred while updating your email.",
-                                            });
-                                        });
-                                    }
-                                }
+                                            } else {
+                                                toast({
+                                                    title: "Please Fill out All Fields",
+                                                    description: "Please make sure to enter both your email address and password",
+                                                });
+                                            }
 
-                                if (phoneNotBlank) {
-                                    let verifyPhone = checkPhone(phone);
-                                    if (!verifyPhone) {
-                                        toast({
-                                            title: "Please enter a valid phone number",
-                                            description: "The phone number you have entered is not properly formatted",
-                                        });
-                                    } else {
-                                        await updateDoc(userRef, {
-                                            pNum: phone,
-                                        })
-                                    }
-                                }
 
-                                if (fNameNotBlank) { await updateDoc(userRef, { firstName: firstName, }); }
-                                if (lNameNotBlank) { await updateDoc(userRef, { lastName: lastName, }); }
-                                if (genderNotBlank) { await updateDoc(userRef, { gender: gender, }); }
-
-                                if (passwordNotBlank) {
-                                    let verifyPassword = checkPassword(password);
-                                    if (!verifyPassword) {
-                                        toast({
-                                            title: "Strong password required",
-                                            description: "Please make sure your password is at least 6 characters long",
-                                        });
-                                    } else {
-                                        updatePassword(auth.currentUser, password).then(() => { }).catch((error) => {
-                                            toast({
-                                                title: "An error has occurred",
-                                                description: "An error has occurred while updating your password.",
-                                            });
-                                        });
-                                    }
+                                        }} type="submit">Save changes</Button>
                                 }
-                                setFirstName("");
-                                setLastName("");
-                                setEmail("");
-                                setPhone("");
-                                setPassword("");
-                                setGender("");
-                                setLoading(false);
-                            }}>Save Changes</Button>
-                    }
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </CardFooter>
             </Card>
         </div>
