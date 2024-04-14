@@ -30,7 +30,7 @@ import {
 import { useToast } from "./use-toast"
 import { Loader2 } from "lucide-react"
 import { doc, getFirestore, updateDoc } from 'firebase/firestore';
-import { getAuth, reauthenticateWithCredential, signInWithEmailAndPassword, updateEmail, updatePassword, EmailAuthProvider } from 'firebase/auth';
+import { getAuth, reauthenticateWithCredential, updateEmail, updatePassword, EmailAuthProvider, GoogleAuthProvider, reauthenticateWithPopup } from 'firebase/auth';
 
 const checkEmail = (email) => {
     let emailExp = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -49,8 +49,8 @@ const checkPhone = (phone) => {
 const Settings = (props) => {
     const db = getFirestore();
     const auth = getAuth();
+    const googleProvider = new GoogleAuthProvider();
     const { toast } = useToast();
-
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [gender, setGender] = useState("");
@@ -105,25 +105,81 @@ const Settings = (props) => {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="flex flex-col space-y-1.5">
-                                <Label htmlFor="email">Email Address</Label>
-                                <Input id="email" placeholder="Email Address" value={email} disabled={loading} onInput={i => { setEmail(i.target.value) }} />
-                            </div>
+                            {auth.currentUser.providerData[0].providerId !== "google.com" &&
+                                <div className="flex flex-col space-y-1.5">
+                                    <Label htmlFor="email">Email Address</Label>
+                                    <Input id="email" placeholder="Email Address" value={email} disabled={loading} onInput={i => { setEmail(i.target.value) }} />
+                                </div>
+                            }
                             <div className="flex flex-col space-y-1.5">
                                 <Label htmlFor="phone">Phone Number</Label>
                                 <Input id="phone" type="tel" placeholder="Phone Number" value={phone} disabled={loading} onInput={i => { setPhone(i.target.value) }} />
                             </div>
-                            <div className="flex flex-col space-y-1.5">
-                                <Label htmlFor="pwrd">Password</Label>
-                                <Input id="pwrd" placeholder="Password" value={password} disabled={loading} onInput={i => { setPassword(i.target.value) }} />
-                            </div>
+                            {auth.currentUser.providerData[0].providerId !== "google.com" &&
+                                <div className="flex flex-col space-y-1.5">
+                                    <Label htmlFor="pwrd">Password</Label>
+                                    <Input id="pwrd" placeholder="Password" value={password} disabled={loading} onInput={i => { setPassword(i.target.value) }} />
+                                </div>
+                            }
                         </div>
                     </form>
                 </CardContent>
                 <CardFooter className="flex justify-between">
                     <Dialog open={dialogOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="outline" onClick={() => {setDialogOpen(true)}}>Save Changes</Button>
+                            {
+                                loading ?
+                                    <Button disabled>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Please wait
+                                    </Button>
+                                    :
+                                    <Button variant="outline" onClick={async () => {
+                                        setLoading(true);
+                                        if (auth.currentUser.providerData[0].providerId !== "google.com") {
+                                            setDialogOpen(true);
+                                        } else {
+                                            await reauthenticateWithPopup(auth.currentUser, googleProvider).then(async (userCredential) => {
+                                                let userRef = doc(db, "Users", userCredential.user.uid);
+
+                                                let phoneNotBlank = (phone !== "");
+                                                let fNameNotBlank = (firstName !== "");
+                                                let lNameNotBlank = (lastName !== "");
+                                                let genderNotBlank = (gender !== "");
+
+                                                if (phoneNotBlank) {
+                                                    let verifyPhone = checkPhone(phone);
+                                                    if (!verifyPhone) {
+                                                        toast({
+                                                            title: "Please enter a valid phone number",
+                                                            description: "The phone number you have entered is not properly formatted",
+                                                        });
+                                                    } else {
+                                                        await updateDoc(userRef, {
+                                                            pNum: phone,
+                                                        })
+                                                    }
+                                                }
+
+                                                if (fNameNotBlank) { await updateDoc(userRef, { firstName: firstName, }); }
+                                                if (lNameNotBlank) { await updateDoc(userRef, { lastName: lastName, }); }
+                                                if (genderNotBlank) { await updateDoc(userRef, { gender: gender, }); }
+
+                                                setFirstName("");
+                                                setLastName("");
+                                                setPhone("");
+                                                setGender("");
+                                                setLoading(false);
+                                            }).catch((error) => {
+                                                console.log(error);
+                                                toast({
+                                                    title: "An error has occurred",
+                                                    description: "An error has occurred while reauthenticating",
+                                                });
+                                            });
+                                        }
+                                    }}>Save Changes</Button>
+                            }
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px]">
                             <DialogHeader>
