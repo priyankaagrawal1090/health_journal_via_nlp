@@ -2,6 +2,7 @@ import React, { useState, Component, useEffect } from "react";
 // import '../App.css'
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { Separator } from "./separator";
 import {
   getFirestore,
   collection,
@@ -124,17 +125,19 @@ export default function AppointmentView() {
   return (
     <div className="appointment-view-container">
       <h2
-        className="flex justify-center items-center"
+        className="text-3xl font-medium leading-none flex justify-center items-center"
         style={{
+          paddingTop: "20px",
           marginBottom: "10px",
           padding: "10px",
-          fontFamily: "Roboto, sans-serif",
-          fontSize: "24px",
-          fontWeight: "bold",
+          //   fontFamily: "Roboto, sans-serif",
+          //   fontSize: "24px",
+          //   fontWeight: "bold",
         }}
       >
         Booked Slots
       </h2>
+      <Separator className="my-4" />
       {!hasBookedSlots && (
         <h3 className="flex justify-center items-center">
           No slots booked currently
@@ -181,19 +184,21 @@ export default function AppointmentView() {
       </div>
 
       <h2
-        className="flex justify-center items-center"
+        className="text-3xl font-medium leading-none flex justify-center items-center"
         style={{
-          marginTop: "20px",
+          marginTop: "10px",
+          paddingTop: "20px",
           marginBottom: "20px",
-          borderTop: "1px solid #ccc",
-          fontFamily: "Roboto, sans-serif",
-          fontSize: "24px",
-          fontWeight: "bold",
+          //   borderTop: "1px solid #ccc",
+          //   fontFamily: "Roboto, sans-serif",
+          //   fontSize: "24px",
+          //   fontWeight: "bold",
           padding: "10px",
         }}
       >
         Open Slots
       </h2>
+      <Separator className="my-4" />
       <div className="upcoming-appointment-view-container grid grid-cols-6 gap-1 justify-evenly flex justify-center items-center">
         {!hasOpenSlots && <h3>No open slots currently</h3>}
         {openSlotData.map((slot) => (
