@@ -1,13 +1,9 @@
 import * as React from "react";
 import Topnav from "./Topnav";
 import Container from "@mui/material/Container";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card"
-// import Card from "@mui/material/Card";
-// import CardContent from "@mui/material/CardContent";
+import { Card, CardContent, CardHeader, CardTitle } from "./card"
 import Typography from "@mui/material/Typography";
 import { Grid } from "@mui/material";
-import bgimg from "./../backimg.jpg";
-// import "../App.css";
 
 export default function About() {
   return (
