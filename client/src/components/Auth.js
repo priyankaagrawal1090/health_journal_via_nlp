@@ -50,12 +50,12 @@ import {
   GoogleAuthProvider,
   getAdditionalUserInfo,
   sendPasswordResetEmail,
+  fetchSignInMethodsForEmail,
 } from "firebase/auth";
 
 import Topnav from "./Topnav";
 import * as React from "react";
 import { Separator } from "./separator";
-import { Link } from "react-router-dom";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDvXnjcl4fyhzIXxhN-NSJFom3DLonoih0",
@@ -104,6 +104,11 @@ const Auth = () => {
     return !snapshot.empty; // Return true if email exists, false otherwise
   };
 
+  const checkEmailProviderGoogle = async (email) => {
+    const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+    return signInMethods.includes("google.com");
+  }
+
   const checkEmail = (email) => {
     let emailExp =
       /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -116,7 +121,6 @@ const Auth = () => {
   };
 
   const checkEmpty = (input) => {
-    console.log(input.trim() !== "");
     return input.trim() !== "";
   };
 
@@ -273,6 +277,8 @@ const Auth = () => {
                         e.preventDefault();
                         setResetLoading(true);
                         const checkEmailEmpty = checkEmpty(resetEmail);
+                        const checkProviderGoogle = await checkEmailProviderGoogle(resetEmail);
+                        console.log("Contains Google: ", checkProviderGoogle);
                         if (!checkEmailEmpty) {
                           toast({
                             title: "Please enter an email address",
@@ -280,6 +286,13 @@ const Auth = () => {
                               "To reset your password, fill out the email field",
                           });
                           setResetLoading(false);
+                        } else if(checkProviderGoogle) {
+                          toast({
+                            title: "Cannot reset password for Google account",
+                            description:
+                              "The password for this account cannot be reset because it is a Google account",
+                          });
+                          setResetLoading(false);                          
                         } else {
                           const verifyEmail = checkEmail(resetEmail)
                           if (!verifyEmail) {
