@@ -142,7 +142,7 @@ const Chatbox = (props) => {
   }
 
   const fetchResources = async (userInput) => {
-    let response = await axios.post('http://192.168.68.108:5000/process_query', { query: userInput });
+    let response = await axios.post('http://192.168.1.12:5000/process_query', { query: userInput });
     let top_5_links = response.data.links.slice(0, 5);
     let top5linkstr = "";
     for (let i = 0; i < top_5_links.length; i++) {
@@ -182,12 +182,12 @@ const Chatbox = (props) => {
   }
 
   const fetchChatResponse = async (userQuestion) => {
-    let response = await axios.post('http://192.168.68.108:5000/chatresponse', userQuestion);
+    let response = await axios.post('http://192.168.1.12:5000/chatresponse', userQuestion);
     return response.data.chat_response;
   }
 
   const fetchUserIntent = async (userQuestion) => {
-    let response = await axios.post('http://192.168.68.108:5000/userintent', userQuestion);
+    let response = await axios.post('http://192.168.1.12:5000/userintent', userQuestion);
     let labels = response.data.user_intent;
     labels.sort((a, b) => b.score - a.score);
     return labels[0].label;

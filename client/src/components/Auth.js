@@ -16,6 +16,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
+  DialogClose
 } from "./dialog";
 import { useToast } from "./use-toast";
 import {
@@ -65,22 +67,6 @@ const firebaseConfig = {
   measurementId: "G-7V9YPQPLEP",
 };
 
-const checkEmail = (email) => {
-  let emailExp =
-    /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return emailExp.test(email);
-};
-
-const checkPhone = (phone) => {
-  let phoneExp = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
-  return phoneExp.test(phone);
-};
-
-const checkEmpty = (input) => {
-  console.log(input.trim() !== "");
-  return input.trim() !== "";
-};
-
 const Auth = () => {
   const { toast } = useToast();
 
@@ -99,6 +85,8 @@ const Auth = () => {
   const [resetLoading, setResetLoading] = React.useState(false);
   const [signInLoading, setSignInLoading] = React.useState(false);
 
+  const [resetEmail, setResetEmail] = React.useState("");
+
   const [userRegEmail, setUserRegEmail] = React.useState("");
   const [userPhoneNum, setUserPhoneNum] = React.useState("");
   const [userFirstName, setUserFirstName] = React.useState("");
@@ -114,6 +102,22 @@ const Auth = () => {
     const q = query(usersRef, where("email", "==", email));
     const snapshot = await getDocs(q);
     return !snapshot.empty; // Return true if email exists, false otherwise
+  };
+
+  const checkEmail = (email) => {
+    let emailExp =
+      /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return emailExp.test(email);
+  };
+
+  const checkPhone = (phone) => {
+    let phoneExp = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
+    return phoneExp.test(phone);
+  };
+
+  const checkEmpty = (input) => {
+    console.log(input.trim() !== "");
+    return input.trim() !== "";
   };
 
   return (
@@ -196,6 +200,7 @@ const Auth = () => {
                     id="user-email"
                     type="email"
                     disabled={signInLoading}
+                    value={userSignInEmail}
                     onInput={(i) => {
                       setUserSignInEmail(i.target.value);
                     }}
@@ -207,59 +212,15 @@ const Auth = () => {
                     id="password"
                     type="password"
                     disabled={signInLoading}
+                    value={userSignInPassword}
                     onInput={(i) => {
                       setUserSignInPassword(i.target.value);
                     }}
                   />
                 </div>
               </CardContent>
-              <Link
-                to="#"
-                onClick={async (e) => {
-                  e.preventDefault();
-                  setResetLoading(true);
-
-                  // Check if email exists
-                  const emailExists = await checkEmailExists(userSignInEmail);
-
-                  if (emailExists) {
-                    // Email exists, send password reset email
-                    sendPasswordResetEmail(auth, userSignInEmail)
-                      .then(() => {
-                        toast({
-                          title: "Password reset email sent",
-                          description:
-                            "Check your email for instructions to reset your password.",
-                        });
-                      })
-                      .catch((error) => {
-                        console.error(
-                          "Error sending password reset email:",
-                          error
-                        );
-                        toast({
-                          title: "Error sending email",
-                          description:
-                            "An error occurred while sending the password reset email.",
-                        });
-                      })
-                      .finally(() => {
-                        setResetLoading(false);
-                      });
-                  } else {
-                    // Email does not exist, show error message
-                    toast({
-                      title: "Email not found",
-                      description:
-                        "The email you entered does not exist in our records.",
-                    });
-                    setResetLoading(false);
-                  }
-                }}
-              >
-                {resetLoading ? (
-                  <span style={{ paddingLeft: "25px" }}>Sending...</span>
-                ) : (
+              <Dialog>
+                <DialogTrigger asChild>
                   <span
                     style={{
                       paddingLeft: "25px",
@@ -281,8 +242,100 @@ const Auth = () => {
                   >
                     Forgot Password?
                   </span>
-                )}
-              </Link>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Password Reset</DialogTitle>
+                    <DialogDescription>
+                      Enter your email and we will send you a link to reset your password
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex items-center space-x-2">
+                    <div className="grid flex-1 gap-2">
+                      <Label htmlFor="link" className="sr-only">
+                        Email
+                      </Label>
+                      <Input
+                        id="link"
+                        value={resetEmail}
+                        onInput={(i) => { setResetEmail(i.target.value) }}
+                        placeholder="Email"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter className="sm:justify-start">
+                    {resetLoading ? (
+                      <Button disabled>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      </Button>
+                    ) : (
+                      <Button type="button" variant="secondary" onClick={async (e) => {
+                        e.preventDefault();
+                        setResetLoading(true);
+                        const checkEmailEmpty = checkEmpty(resetEmail);
+                        if (!checkEmailEmpty) {
+                          toast({
+                            title: "Please enter an email address",
+                            description:
+                              "To reset your password, fill out the email field",
+                          });
+                          setResetLoading(false);
+                        } else {
+                          const verifyEmail = checkEmail(resetEmail)
+                          if (!verifyEmail) {
+                            toast({
+                              title: "Please enter a valid email address",
+                              description:
+                                "The email address you have entered is not properly formatted",
+                            });
+                            setResetLoading(false);
+                          } else {
+                            // Check if email exists
+                            const emailExists = await checkEmailExists(resetEmail);
+
+                            if (emailExists) {
+                              // Email exists, send password reset email
+                              sendPasswordResetEmail(auth, resetEmail)
+                                .then(() => {
+                                  toast({
+                                    title: "Password reset email sent",
+                                    description:
+                                      "Check your email for instructions to reset your password.",
+                                  });
+                                })
+                                .catch((error) => {
+                                  console.error(
+                                    "Error sending password reset email:",
+                                    error
+                                  );
+                                  toast({
+                                    title: "Error sending email",
+                                    description:
+                                      "An error occurred while sending the password reset email.",
+                                  });
+                                })
+                                .finally(() => {
+                                  setResetLoading(false);
+                                });
+                            } else {
+                              // Email does not exist, show error message
+                              toast({
+                                title: "Email not found",
+                                description:
+                                  "The email you entered does not exist in our records.",
+                              });
+                              setResetLoading(false);
+                            }
+                          }
+                        }
+                      }}
+                      >
+                        Reset Password
+                      </Button>
+                    )}
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               <CardFooter>
                 {signInLoading ? (
                   <Button disabled>
