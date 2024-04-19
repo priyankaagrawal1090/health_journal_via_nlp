@@ -57,7 +57,7 @@ export function DoctorSidebar(props) {
     <aside id="sidebar" class="absolute fixed left-0 top-0 z-40 h-screen w-64 transition-transform" aria-label="Sidebar">
       <div class="flex h-full flex-col overflow-y-auto border-r border-slate-200 bg-white px-3 py-4 dark:border-slate-700 dark:bg-slate-900">
         <div href="#" class="mb-10 flex items-center rounded-lg px-3 py-2 text-slate-900 dark:text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-plus"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 14h6"/><path d="M12 17v-6"/></svg>          <span class="ml-3 text-base font-semibold">Health Journal</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-plus"><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="M9 14h6" /><path d="M12 17v-6" /></svg>          <span class="ml-3 text-base font-semibold">Health Journal</span>
         </div>
         <ul class="space-y-2 text-sm font-medium">
           <li>
@@ -106,7 +106,9 @@ export function DoctorSidebar(props) {
         </ul>
         <div class="mt-auto flex">
           <div class="flex w-full justify-between">
-            <span class="text-sm font-medium text-black dark:text-white">{props.userEmail}</span>
+            <div className="w-7/12 truncate">
+              <span class="text-xs font-medium text-black dark:text-white">{props.userEmail}</span>
+            </div>
             <svg onClick={props.logOut} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out" style={{ cursor: "pointer" }}>
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
@@ -124,7 +126,7 @@ export function PatientSidebar(props) {
     <aside id="sidebar" class="fixed left-0 top-0 z-40 h-screen w-64 transition-transform" aria-label="Sidebar">
       <div class="flex h-full flex-col overflow-y-auto border-r border-slate-200 bg-white px-3 py-4 dark:border-slate-700 dark:bg-slate-900">
         <div href="#" class="mb-10 flex items-center rounded-lg px-3 py-2 text-slate-900 dark:text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-plus"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 14h6"/><path d="M12 17v-6"/></svg>          <span class="ml-3 text-base font-semibold">Health Journal</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-plus"><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="M9 14h6" /><path d="M12 17v-6" /></svg>          <span class="ml-3 text-base font-semibold">Health Journal</span>
         </div>
         <ul class="space-y-2 text-sm font-medium">
           <li>
@@ -152,7 +154,9 @@ export function PatientSidebar(props) {
         </ul>
         <div class="mt-auto flex">
           <div class="flex w-full justify-between">
-            <span class="text-sm font-medium text-black dark:text-white">{props.userEmail}</span>
+            <div className="w-7/12 truncate">
+              <span class="text-xs font-medium text-black dark:text-white">{props.userEmail}</span>
+            </div>
             <svg onClick={props.logOut} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out" style={{ cursor: "pointer" }}>
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
