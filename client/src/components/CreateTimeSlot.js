@@ -87,7 +87,7 @@ const CreateTimeSlot = (props) => {
       const timeSlotsRef = collection(db, "Time Slots");
       const slotData = {
         doctorId: props.doctorId,
-        slotDate: slotDate,
+        slotDate: moment(slotDate).format("YYYY-MM-DD"),
         startTime: startTime,
         endTime: endTime,
       };
@@ -174,7 +174,7 @@ const CreateTimeSlot = (props) => {
                         mode="single"
                         selected={slotDate}
                         onSelect={(slotDate) => {
-                          setSlotDate(moment(slotDate).format("YYYY-MM-DD"));
+                          setSlotDate(slotDate);
                         }}
                         disabled={(slotDate) => slotDate < new Date()}
                       />
