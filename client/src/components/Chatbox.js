@@ -431,14 +431,13 @@ const Chatbox = (props) => {
                         mode="single"
                         selected={date}
                         onSelect={
-                          (date) => {
-                            setDate(date);
-                            console.log(date);
+                          (selectedDate) => {
+                            setDate(selectedDate);
                             setSelectedDoctorID("");
                             setDoctorsForSelectedDate([]);
                             setFilteredTimeSlots([]);
                             setSelectedSlotId("");
-                            socket.emit("selected_appointment_date", { selectedDate: date });
+                            socket.emit("selected_appointment_date", { selectedDate: selectedDate });
                           }
                         }
                       />
@@ -513,7 +512,7 @@ const Chatbox = (props) => {
                   setIsBookingAppointment(false);
                   let updateMessages = [
                     ...messages,
-                    { text: `Thank you for booking an appointment! You are all set for your appointment on ${date} with ${"Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName}`, user: "bot" },
+                    { text: `Thank you for booking an appointment! You are all set for your appointment on ${formatDate(selectedSlot[0].slotDate)} with ${"Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName} from ${formatTime(selectedSlot[0].startTime) + " to " + formatTime(selectedSlot[0].endTime)}`, user: "bot" },
                   ];
                   setMessages(updateMessages);
                   setUserInput("");
