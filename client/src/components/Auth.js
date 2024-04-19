@@ -277,70 +277,69 @@ const Auth = () => {
                         e.preventDefault();
                         setResetLoading(true);
                         const checkEmailEmpty = checkEmpty(resetEmail);
-                        const checkProviderGoogle = await checkEmailProviderGoogle(resetEmail);
-                        console.log("Contains Google: ", checkProviderGoogle);
                         if (!checkEmailEmpty) {
                           toast({
                             title: "Please enter an email address",
                             description:
                               "To reset your password, fill out the email field",
                           });
-                          setResetLoading(false);
-                        } else if(checkProviderGoogle) {
-                          toast({
-                            title: "Cannot reset password for Google account",
-                            description:
-                              "The password for this account cannot be reset because it is a Google account",
-                          });
-                          setResetLoading(false);                          
                         } else {
-                          const verifyEmail = checkEmail(resetEmail)
-                          if (!verifyEmail) {
+                          const checkProviderGoogle = await checkEmailProviderGoogle(resetEmail);
+                          console.log("Contains Google: ", checkProviderGoogle);
+                          if (checkProviderGoogle) {
                             toast({
-                              title: "Please enter a valid email address",
+                              title: "Cannot reset password for Google account",
                               description:
-                                "The email address you have entered is not properly formatted",
+                                "The password for this account cannot be reset because it is a Google account",
                             });
-                            setResetLoading(false);
                           } else {
-                            // Check if email exists
-                            const emailExists = await checkEmailExists(resetEmail);
-
-                            if (emailExists) {
-                              // Email exists, send password reset email
-                              sendPasswordResetEmail(auth, resetEmail)
-                                .then(() => {
-                                  toast({
-                                    title: "Password reset email sent",
-                                    description:
-                                      "Check your email for instructions to reset your password.",
-                                  });
-                                })
-                                .catch((error) => {
-                                  console.error(
-                                    "Error sending password reset email:",
-                                    error
-                                  );
-                                  toast({
-                                    title: "Error sending email",
-                                    description:
-                                      "An error occurred while sending the password reset email.",
-                                  });
-                                })
-                                .finally(() => {
-                                  setResetLoading(false);
-                                });
-                            } else {
-                              // Email does not exist, show error message
+                            const verifyEmail = checkEmail(resetEmail)
+                            if (!verifyEmail) {
                               toast({
-                                title: "Email not found",
+                                title: "Please enter a valid email address",
                                 description:
-                                  "The email you entered does not exist in our records.",
+                                  "The email address you have entered is not properly formatted",
                               });
-                              setResetLoading(false);
+                            } else {
+                              // Check if email exists
+                              const emailExists = await checkEmailExists(resetEmail);
+
+                              if (emailExists) {
+                                // Email exists, send password reset email
+                                sendPasswordResetEmail(auth, resetEmail)
+                                  .then(() => {
+                                    toast({
+                                      title: "Password reset email sent",
+                                      description:
+                                        "Check your email for instructions to reset your password.",
+                                    });
+                                  })
+                                  .catch((error) => {
+                                    console.error(
+                                      "Error sending password reset email:",
+                                      error
+                                    );
+                                    toast({
+                                      title: "Error sending email",
+                                      description:
+                                        "An error occurred while sending the password reset email.",
+                                    });
+                                  })
+                                  .finally(() => {
+                                    setResetLoading(false);
+                                  });
+                              } else {
+                                // Email does not exist, show error message
+                                toast({
+                                  title: "Email not found",
+                                  description:
+                                    "The email you entered does not exist in our records.",
+                                });
+                              }
                             }
                           }
                         }
+                        setResetLoading(false);
                       }}
                       >
                         Reset Password
@@ -632,6 +631,7 @@ const Auth = () => {
                             });
                         }
                       }
+                      setRegisterLoading(false);
                     }}
                   >
                     Create Account
