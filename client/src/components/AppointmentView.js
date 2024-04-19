@@ -2,6 +2,7 @@ import React, { useState, Component, useEffect } from "react";
 // import '../App.css'
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { formatDate, formatTime } from "./formatutils"
 import { Separator } from "./separator";
 import {
   getFirestore,
@@ -143,7 +144,7 @@ export default function AppointmentView() {
           No slots booked currently
         </h3>
       )}
-      <div className="pending-appointment-view-container grid grid-cols-6 gap-1 justify-evenly flex justify-center items-center">
+      <div className="ml-64 px-2 pending-appointment-view-container grid grid-cols-5 gap-1 justify-evenly flex justify-center items-center">
         {bookedSlotData.map((slot) => (
           <div className="pending-appointment-card-container">
             <Card className="w-[250px]">
@@ -154,15 +155,15 @@ export default function AppointmentView() {
                 <div className="grid w-full items-center gap-4">
                   <div className="flex flex-col space-y-1.5">
                     <Label>Slot Date:</Label>
-                    <p>{slot.slotDate}</p>
+                    <p>{formatDate(slot.slotDate)}</p>
                   </div>
                   <div className="flex flex-col space-y-1.5">
                     <Label>Start Time:</Label>
-                    <p>{slot.startTime}</p>
+                    <p>{formatTime(slot.startTime)}</p>
                   </div>
                   <div className="flex flex-col space-y-1.5">
                     <Label>End Time:</Label>
-                    <p>{slot.endTime}</p>
+                    <p>{formatTime(slot.endTime)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -199,7 +200,7 @@ export default function AppointmentView() {
         Open Slots
       </h2>
       <Separator className="my-4" />
-      <div className="upcoming-appointment-view-container grid grid-cols-6 gap-1 justify-evenly flex justify-center items-center">
+      <div className="ml-64 px-2 upcoming-appointment-view-container grid grid-cols-6 gap-1 justify-evenly flex justify-center items-center">
         {!hasOpenSlots && <h3>No open slots currently</h3>}
         {openSlotData.map((slot) => (
           <div className="pending-appointment-card-container">
@@ -211,15 +212,15 @@ export default function AppointmentView() {
                 <div className="grid w-full items-center gap-4">
                   <div className="flex flex-col space-y-1.5">
                     <Label>Slot Date:</Label>
-                    <p>{slot.slotDate}</p>
+                    <p>{formatDate(slot.slotDate)}</p>
                   </div>
                   <div className="flex flex-col space-y-1.5">
                     <Label>Start Time:</Label>
-                    <p>{slot.startTime}</p>
+                    <p>{formatTime(slot.startTime)}</p>
                   </div>
                   <div className="flex flex-col space-y-1.5">
                     <Label>End Time:</Label>
-                    <p>{slot.endTime}</p>
+                    <p>{formatTime(slot.endTime)}</p>
                   </div>
                 </div>
               </CardContent>

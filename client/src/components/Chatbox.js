@@ -4,6 +4,7 @@ import { io } from 'socket.io-client'
 import "../App.css";
 import { initializeApp } from 'firebase/app'
 import moment from "moment"
+import { formatDate, formatTime } from "./formatutils"
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where } from 'firebase/firestore';
 import Typewriter from "typewriter-effect";
 import "react-datepicker/dist/react-datepicker.css";
@@ -142,7 +143,7 @@ const Chatbox = (props) => {
   }
 
   const fetchResources = async (userInput) => {
-    let response = await axios.post('http://192.168.1.12:5000/process_query', { query: userInput });
+    let response = await axios.post('http://192.168.1.5:5000/process_query', { query: userInput });
     let top_5_links = response.data.links.slice(0, 5);
     let top5linkstr = "";
     for (let i = 0; i < top_5_links.length; i++) {
@@ -182,12 +183,12 @@ const Chatbox = (props) => {
   }
 
   const fetchChatResponse = async (userQuestion) => {
-    let response = await axios.post('http://192.168.1.12:5000/chatresponse', userQuestion);
+    let response = await axios.post('http://192.168.1.5:5000/chatresponse', userQuestion);
     return response.data.chat_response;
   }
 
   const fetchUserIntent = async (userQuestion) => {
-    let response = await axios.post('http://192.168.1.12:5000/userintent', userQuestion);
+    let response = await axios.post('http://192.168.1.5:5000/userintent', userQuestion);
     let labels = response.data.user_intent;
     labels.sort((a, b) => b.score - a.score);
     return labels[0].label;
@@ -244,8 +245,8 @@ const Chatbox = (props) => {
         patientAppointments[i].doctorEmail = doctorInfo.email;
         patientAppointments[i].doctorFName = doctorInfo.firstName;
         patientAppointments[i].doctorLName = doctorInfo.lastName;
-        let apptInfoStr = "You have an appointment with Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName + " on " + patientAppointments[i].slotDate +
-          " from " + patientAppointments[i].startTime + " to " + patientAppointments[i].endTime;
+        let apptInfoStr = "You have an appointment with Dr. " + doctorInfo.firstName + " " + doctorInfo.lastName + " on " + formatDate(patientAppointments[i].slotDate) +
+          " from " + formatTime(patientAppointments[i].startTime) + " to " + formatTime(patientAppointments[i].endTime);
         patientApptInfo.push({ text: apptInfoStr, user: "bot", userIntent: "view" });
       }
       setMessages(prevMessages => {
@@ -342,7 +343,7 @@ const Chatbox = (props) => {
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent position="popper">
-                      {enabledDates.map(date => <SelectItem value={date}>{date}</SelectItem>)}
+                      {enabledDates.map(date => <SelectItem value={date}>{formatDate(date)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -358,7 +359,7 @@ const Chatbox = (props) => {
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent position="popper">
-                      {filteredTimeSlots.map(slot => <SelectItem value={slot.slotId}>{"Start Time: " + slot.startTime + " End Time: " + slot.endTime}</SelectItem>)}
+                      {filteredTimeSlots.map(slot => <SelectItem value={slot.slotId}>{"Start Time: " + formatTime(slot.startTime) + " End Time: " + formatTime(slot.endTime)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -475,7 +476,7 @@ const Chatbox = (props) => {
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent position="popper">
-                      {filteredTimeSlots.map(slot => <SelectItem key={slot.slotId} value={slot.slotId}>{"Start: " + slot.startTime + " " + "End: " + slot.endTime}</SelectItem>)}
+                      {filteredTimeSlots.map(slot => <SelectItem key={slot.slotId} value={slot.slotId}>{"Start: " + formatTime(slot.startTime) + " " + "End: " + formatTime(slot.endTime)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

@@ -69,6 +69,7 @@ const Settings = (props) => {
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [popupLoading, setPopupLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const noChanges = () => {
@@ -315,7 +316,7 @@ const Settings = (props) => {
                   </div>
                 </div>
                 <DialogFooter>
-                  {loading ? (
+                  {popupLoading ? (
                     <Button disabled>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Please wait
@@ -323,7 +324,7 @@ const Settings = (props) => {
                   ) : (
                     <Button
                       onClick={async () => {
-                        setLoading(true);
+                        setPopupLoading(true);
                         if (currPassword !== "") {
                           let credential = EmailAuthProvider.credential(
                             auth.currentUser.email,
@@ -437,7 +438,7 @@ const Settings = (props) => {
                               setPassword("");
                               setGender("");
                               setCurrPassword("");
-                              setLoading(false);
+                              setPopupLoading(false);
                               setDialogOpen(false);
                             })
                             .catch((error) => {
