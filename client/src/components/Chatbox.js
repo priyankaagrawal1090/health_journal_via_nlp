@@ -283,9 +283,33 @@ const Chatbox = (props) => {
       verificationMessage += "<br><br><span>Message Verified by Medical Professional</span>";
     } else if (message.user == "bot" && !message.verified && (message.userIntent == "chat" || message.userIntent == "search")) {
       verificationMessage += "<br><br><span>Message NOT Verified by Medical Professional</span>";
-    } else {
+    }
+    else {
       return message.text;
     }
+
+    if (message.userIntent == "search") {
+      let responseMessage = message.text.split("\n\n");
+      let outputMessage = ""
+      for (let i = 0; i < responseMessage.length; i++) {
+        outputMessage += (responseMessage[i] + "<br>")
+      }
+      return (
+        <div>
+          <Typewriter
+            options={{ delay: 30, cursor: "" }}
+            onInit={(typewriter) => {
+              typewriter
+                .typeString(outputMessage)
+                .start()
+                .typeString(verificationMessage)
+                .start();
+            }}
+          />
+        </div>
+      );
+    }
+
     return (
       <div>
         <Typewriter
