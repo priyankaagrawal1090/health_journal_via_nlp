@@ -380,7 +380,7 @@ const Auth = () => {
                             }
                           })
                           .catch((error) => {
-                            if (error.code === "auth/invalid-credential") {
+                            if (error.code === "auth/invalid-credential" || error.code === "auth/user-not-found") {
                               toast({
                                 title: "Invalid email or password",
                                 description:
@@ -401,6 +401,7 @@ const Auth = () => {
                             "The email address you have entered is not properly formatted",
                         });
                       }
+                      setSignInLoading(false);
                     }}
                   >
                     Sign In
