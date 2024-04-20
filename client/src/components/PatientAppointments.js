@@ -10,6 +10,7 @@ import {
   doc,
   getDocs,
   getDoc,
+  setDoc,
   deleteDoc,
   query,
   where,
@@ -38,6 +39,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore();
+const auth = getAuth();
 
 const fetchUserData = async () => {
   const user = getAuth().currentUser;
@@ -51,26 +53,32 @@ const fetchUserData = async () => {
     }
   }
 };
-
-const fetchBookedAppointments = async () => {
-  const bookedAppointments = [];
-  const user = getAuth().currentUser;
-  if (user) {
-    const slotQuery = query(
-      collection(db, "Booked Appointments"),
-      where("patientId", "==", user.uid)
-    );
-    const slotQuerySnap = await getDocs(slotQuery);
-    slotQuerySnap.forEach((doc) => {
-      bookedAppointments.push({ id: doc.id, ...doc.data() });
-    });
-  }
-  return bookedAppointments;
+const fetchUserAppointments = async (userId) => {
+  const patientAppointments = [];
+  const patientTimeSlotsQuery = query(
+    collection(db, "Booked Time Slots"),
+    where("userId", "==", userId)
+  );
+  const patientTimeSlotsQuerySnap = await getDocs(patientTimeSlotsQuery);
+  patientTimeSlotsQuerySnap.forEach((doc) => {
+    let data = doc.data();
+    patientAppointments.push(data);
+  });
+  return patientAppointments;
 };
 
 const cancelBookedAppointment = async (appointmentId) => {
   await deleteDoc(doc(db, "Booked Appointments", appointmentId));
 };
+
+const cancelAppointment = async (selectedSlot) => {
+  delete selectedSlot["userId"];
+  await setDoc(
+    doc(db, "Time Slots", selectedSlot.slotId),
+    selectedSlot
+  );
+  await deleteDoc(doc(db, "Booked Time Slots", selectedSlot.slotId));
+}
 
 export default function PatientAppointments() {
   const [userData, setUserData] = useState({});
@@ -86,7 +94,7 @@ export default function PatientAppointments() {
 
   useEffect(() => {
     async function fetchBookedAppointmentsData() {
-      let data = await fetchBookedAppointments();
+      let data = await fetchUserAppointments(auth.currentUser.uid);
       setBookedAppointmentData(data);
     }
     fetchBookedAppointmentsData();
@@ -124,13 +132,13 @@ export default function PatientAppointments() {
               </CardHeader>
               <CardContent>
                 <div className="grid w-full items-center gap-4">
-                  <div className="flex flex-col space-y-1.5">
+                  {/* <div className="flex flex-col space-y-1.5">
                     <Label>Doctor Name:</Label>
                     <p>{appointment.doctorName}</p>
-                  </div>
+                  </div> */}
                   <div className="flex flex-col space-y-1.5">
                     <Label>Slot Date:</Label>
-                    <p>{formatDate(appointment.appointmentDate)}</p>
+                    <p>{formatDate(appointment.slotDate)}</p>
                   </div>
                   <div className="flex flex-col space-y-1.5">
                     <Label>Start Time:</Label>
@@ -145,8 +153,8 @@ export default function PatientAppointments() {
               <CardFooter className="flex justify-between justify-center">
                 <Button
                   onClick={async () => {
-                    cancelBookedAppointment(appointment.id);
-                    let updatedData = await fetchBookedAppointments();
+                    cancelAppointment(appointment);
+                    let updatedData = await fetchUserAppointments(auth.currentUser.uid);
                     setBookedAppointmentData(updatedData);
                   }}
                 >

@@ -152,7 +152,7 @@ const Chatbox = (props) => {
   };
 
   const fetchResources = async (userInput) => {
-    let response = await axios.post("http://192.168.0.117:5000/process_query", {
+    let response = await axios.post("http://192.168.1.5:5000/process_query", {
       query: userInput,
     });
     let top_5_links = response.data.links.slice(0, 5);
@@ -200,15 +200,17 @@ const Chatbox = (props) => {
 
   const fetchChatResponse = async (userQuestion) => {
     let response = await axios.post(
-      "http://192.168.0.117:5000/chatresponse",
+      "http://192.168.1.5:5000/chatresponse",
       userQuestion
-    );
+    ).catch((error) => {
+      console.log(error)
+    })
     return response.data.chat_response;
   };
 
   const fetchUserIntent = async (userQuestion) => {
     let response = await axios
-      .post("http://192.168.0.117:5000/userintent", userQuestion)
+      .post("http://192.168.1.5:5000/userintent", userQuestion)
       .catch((error) => {
         console.log(error);
       });
