@@ -53,6 +53,15 @@ const fetchUserData = async () => {
   }
 };
 
+const fetchPatientInfo = async (patientId) => {
+  const patientDocRef = doc(db, "Users", patientId);
+  const patientDataSnap = await getDoc(patientDocRef);
+  if (patientDataSnap.exists()) {
+    return patientDataSnap.data();
+  }
+  return null;
+};
+
 const fetchOpenSlots = async () => {
   const openSlots = [];
   const user = getAuth().currentUser;
@@ -108,6 +117,11 @@ export default function AppointmentView() {
   useEffect(() => {
     async function fetchBookedSlotsData() {
       let data = await fetchBookedSlots();
+      for(let i = 0; i < data.length; i++) {
+        let patientData = await fetchPatientInfo(data[i].userId);
+        data[i]["patientName"] = patientData.firstName + " " + patientData.lastName
+        data[i]["patientPhone"] = patientData.pNum
+      }      
       setBookedSlotData(data);
     }
     fetchBookedSlotsData();
@@ -153,6 +167,14 @@ export default function AppointmentView() {
               </CardHeader>
               <CardContent>
                 <div className="grid w-full items-center gap-4">
+                <div className="flex flex-col space-y-1.5">
+                    <Label>Patient Name:</Label>
+                    <p>{slot.patientName}</p>
+                  </div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label>Patient Phone:</Label>
+                    <p>{slot.patientPhone}</p>
+                  </div>
                   <div className="flex flex-col space-y-1.5">
                     <Label>Slot Date:</Label>
                     <p>{formatDate(slot.slotDate)}</p>
