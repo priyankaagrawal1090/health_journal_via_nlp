@@ -23,6 +23,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./alert-dialog";
+import { Label } from "./label";
+import { Textarea } from "./textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./dialog"
 import { Button } from "./button";
 import { ScrollArea } from "./scroll-area";
 import { BotMessageSquare } from "lucide-react";
@@ -56,8 +67,14 @@ const verifyMessageById = async (id) => {
   }
 };
 
+const editMessageAndVerifyById = async (newMessage, id) => {
+  const messageToUpdate = doc(db, "chatbot messages", id);  
+  await updateDoc(messageToUpdate, { message: newMessage, verified: true });
+}
+
 export default function ChatVerificationView() {
   const [unverifiedMessages, setUnverifiedMessages] = useState([]);
+  const [editUnverifiedMessage, setEditUnverifiedMessage] = useState("");
   useEffect(() => {
     const getMessages = async () => {
       const currMessages = await fetchUnverifiedMessages();
@@ -98,7 +115,7 @@ export default function ChatVerificationView() {
       >
         <div
           className="chat-messages flex justify-center h-3/4"
-          //   style={{ display: "flex", flexDirection: "column" }}
+        //   style={{ display: "flex", flexDirection: "column" }}
         >
           <ScrollArea
             className="mt-10 h-4/5 w-4/5"
@@ -137,6 +154,53 @@ export default function ChatVerificationView() {
                           }}
                         >
                           Verify Message
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild className="ml-6 mt-2">
+                      <Button onClick={() => {
+                        setEditUnverifiedMessage(message.message);
+                        console.log(editUnverifiedMessage);
+                      }} variant="outline" className="pr-6">
+                        Edit Message
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Edit Chatbot Response
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          You can edit the chatbot response to correct it, or add information.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="name" className="text-right">
+                            Chatbot Response
+                          </Label>
+                          <Textarea
+                            id="name"
+                            value={editUnverifiedMessage}
+                            onChange={(e) => {
+                              setEditUnverifiedMessage(e.target.value)
+                            }}
+                            className="col-span-3"
+                          />
+                        </div>
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={async () => {
+                            await editMessageAndVerifyById(editUnverifiedMessage, message.id);
+                            const updateMessages = await fetchUnverifiedMessages();
+                            setUnverifiedMessages(updateMessages);
+                          }}
+                        >
+                          Save Changes
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
