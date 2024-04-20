@@ -71,6 +71,15 @@ const cancelBookedAppointment = async (appointmentId) => {
   await deleteDoc(doc(db, "Booked Appointments", appointmentId));
 };
 
+const fetchDoctorInfo = async (doctorId) => {
+  const doctorDocRef = doc(db, "Users", doctorId);
+  const doctorDataSnap = await getDoc(doctorDocRef);
+  if (doctorDataSnap.exists()) {
+    return doctorDataSnap.data();
+  }
+  return null;
+}
+
 const cancelAppointment = async (selectedSlot) => {
   delete selectedSlot["userId"];
   await setDoc(
@@ -95,6 +104,11 @@ export default function PatientAppointments() {
   useEffect(() => {
     async function fetchBookedAppointmentsData() {
       let data = await fetchUserAppointments(auth.currentUser.uid);
+      for(let i = 0; i < data.length; i++) {
+        let doctorData = await fetchDoctorInfo(data[i].doctorId);
+        data[i]["doctorName"] = doctorData.firstName + " " + doctorData.lastName
+        data[i]["doctorPhone"] = doctorData.pNum
+      }
       setBookedAppointmentData(data);
     }
     fetchBookedAppointmentsData();
@@ -132,10 +146,14 @@ export default function PatientAppointments() {
               </CardHeader>
               <CardContent>
                 <div className="grid w-full items-center gap-4">
-                  {/* <div className="flex flex-col space-y-1.5">
+                  <div className="flex flex-col space-y-1.5">
                     <Label>Doctor Name:</Label>
                     <p>{appointment.doctorName}</p>
-                  </div> */}
+                  </div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label>Doctor Phone:</Label>
+                    <p>{appointment.doctorPhone}</p>
+                  </div>
                   <div className="flex flex-col space-y-1.5">
                     <Label>Slot Date:</Label>
                     <p>{formatDate(appointment.slotDate)}</p>

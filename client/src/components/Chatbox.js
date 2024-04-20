@@ -44,6 +44,7 @@ import { Button } from "./button";
 import { Alert, AlertDescription, AlertTitle } from "./alert";
 import { Send, BotMessageSquare } from "lucide-react";
 import { ScrollArea } from "./scroll-area";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDvXnjcl4fyhzIXxhN-NSJFom3DLonoih0",
@@ -57,6 +58,7 @@ const firebaseConfig = {
 
 const socket = io("http://localhost:4000");
 const app = initializeApp(firebaseConfig);
+const auth = getAuth();
 const db = getFirestore();
 
 const Chatbox = (props) => {
@@ -152,7 +154,7 @@ const Chatbox = (props) => {
   };
 
   const fetchResources = async (userInput) => {
-    let response = await axios.post("http://192.168.1.5:5000/process_query", {
+    let response = await axios.post("http://192.168.1.10:5000/process_query", {
       query: userInput,
     });
     let top_5_links = response.data.links.slice(0, 5);
@@ -200,7 +202,7 @@ const Chatbox = (props) => {
 
   const fetchChatResponse = async (userQuestion) => {
     let response = await axios.post(
-      "http://192.168.1.5:5000/chatresponse",
+      "http://192.168.1.10:5000/chatresponse",
       userQuestion
     ).catch((error) => {
       console.log(error)
@@ -210,7 +212,7 @@ const Chatbox = (props) => {
 
   const fetchUserIntent = async (userQuestion) => {
     let response = await axios
-      .post("http://192.168.1.5:5000/userintent", userQuestion)
+      .post("http://192.168.1.10:5000/userintent", userQuestion)
       .catch((error) => {
         console.log(error);
       });
@@ -699,6 +701,7 @@ const Chatbox = (props) => {
                       user: "bot",
                     },
                   ];
+                  socket.emit("send_confirmation_email", {recipient: auth.currentUser.email, selectedSlot: selectedSlot[0], doctorInfo: doctorInfo});
                   setMessages(updateMessages);
                   setUserInput("");
                   setLoading(false);
