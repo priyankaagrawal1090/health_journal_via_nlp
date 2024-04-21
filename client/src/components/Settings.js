@@ -27,6 +27,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./dialog";
+import { Textarea } from "./textarea";
 import { useToast } from "./use-toast";
 import { Loader2 } from "lucide-react";
 import { doc, getFirestore, updateDoc } from "firebase/firestore";
@@ -62,6 +63,7 @@ const Settings = (props) => {
   const { toast } = useToast();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [bio, setBio] = useState("");
   const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
   const [currPassword, setCurrPassword] = useState("");
@@ -164,19 +166,19 @@ const Settings = (props) => {
                 </div>
                 {auth.currentUser.providerData[0].providerId !==
                   "google.com" && (
-                  <div className="flex flex-col space-y-1.5">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input
-                      id="email"
-                      placeholder="Email Address"
-                      value={email}
-                      disabled={loading}
-                      onInput={(i) => {
-                        setEmail(i.target.value);
-                      }}
-                    />
-                  </div>
-                )}
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        placeholder="Email Address"
+                        value={email}
+                        disabled={loading}
+                        onInput={(i) => {
+                          setEmail(i.target.value);
+                        }}
+                      />
+                    </div>
+                  )}
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input
@@ -192,15 +194,28 @@ const Settings = (props) => {
                 </div>
                 {auth.currentUser.providerData[0].providerId !==
                   "google.com" && (
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="pwrd">Password</Label>
+                      <Input
+                        id="pwrd"
+                        placeholder="Password"
+                        value={password}
+                        disabled={loading}
+                        onInput={(i) => {
+                          setPassword(i.target.value);
+                        }}
+                      />
+                    </div>
+                  )}
+                {props.isDoctor && (
                   <div className="flex flex-col space-y-1.5">
-                    <Label htmlFor="pwrd">Password</Label>
-                    <Input
-                      id="pwrd"
-                      placeholder="Password"
-                      value={password}
-                      disabled={loading}
-                      onInput={(i) => {
-                        setPassword(i.target.value);
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea
+                      id="bio"
+                      placeholder="Enter your bio here"
+                      value={bio}
+                      onChange={(e) => {
+                        setBio(e.target.value)
                       }}
                     />
                   </div>
@@ -242,6 +257,7 @@ const Settings = (props) => {
                             let fNameNotBlank = firstName !== "";
                             let lNameNotBlank = lastName !== "";
                             let genderNotBlank = gender !== "";
+                            let bioNotBlank = bio !== "";
 
                             if (phoneNotBlank) {
                               let verifyPhone = checkPhone(phone);
@@ -269,11 +285,15 @@ const Settings = (props) => {
                             if (genderNotBlank) {
                               await updateDoc(userRef, { gender: gender });
                             }
+                            if (bioNotBlank) {
+                              await updateDoc(userRef, {bio: bio});
+                            }
 
                             setFirstName("");
                             setLastName("");
                             setPhone("");
                             setGender("");
+                            setBio("");
                             setLoading(false);
                           })
                           .catch((error) => {
@@ -284,6 +304,7 @@ const Settings = (props) => {
                                 "An error has occurred while reauthenticating",
                             });
                           });
+                          setLoading(false);
                       }
                     }}
                   >
@@ -341,6 +362,7 @@ const Settings = (props) => {
                               let phoneNotBlank = phone !== "";
                               let fNameNotBlank = firstName !== "";
                               let lNameNotBlank = lastName !== "";
+                              let bioNotBlank = bio !== "";
                               let genderNotBlank = gender !== "";
                               let passwordNotBlank = password !== "";
 
@@ -358,7 +380,7 @@ const Settings = (props) => {
                                       await updateDoc(userRef, {
                                         email: email,
                                       })
-                                        .then(() => {})
+                                        .then(() => { })
                                         .catch((error) => {
                                           console.log(error);
                                           toast({
@@ -407,6 +429,9 @@ const Settings = (props) => {
                               if (genderNotBlank) {
                                 await updateDoc(userRef, { gender: gender });
                               }
+                              if(bioNotBlank) {
+                                await updateDoc(userRef, {bio: bio});
+                              }
 
                               if (passwordNotBlank) {
                                 let verifyPassword = checkPassword(password);
@@ -421,7 +446,7 @@ const Settings = (props) => {
                                     auth.currentUser,
                                     password
                                   )
-                                    .then(() => {})
+                                    .then(() => { })
                                     .catch((error) => {
                                       toast({
                                         title: "An error has occurred",
@@ -437,9 +462,11 @@ const Settings = (props) => {
                               setPhone("");
                               setPassword("");
                               setGender("");
+                              setBio("");
                               setCurrPassword("");
                               setPopupLoading(false);
                               setDialogOpen(false);
+                              setLoading(false);
                             })
                             .catch((error) => {
                               console.log(error);
@@ -456,6 +483,7 @@ const Settings = (props) => {
                               "Please make sure to enter both your email address and password",
                           });
                         }
+                        setLoading(false);
                       }}
                       type="submit"
                     >
