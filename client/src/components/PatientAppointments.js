@@ -1,6 +1,7 @@
 import React, { useState, Component, useEffect } from "react";
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { io } from "socket.io-client";
 import { formatDate, formatTime } from "./formatutils";
 import { Separator } from "./separator";
 import {
@@ -36,6 +37,7 @@ const firebaseConfig = {
   measurementId: "G-7V9YPQPLEP",
 };
 
+const socket = io("http://localhost:4000");
 const app = initializeApp(firebaseConfig);
 const db = getFirestore();
 const auth = getAuth();
@@ -90,13 +92,15 @@ const fetchDoctorInfo = async (doctorId) => {
   return null;
 }
 
-const cancelAppointment = async (selectedSlot) => {
+const cancelAppointment = async (selectedSlot, userData) => {
+  let doctorInfo = await fetchDoctorInfo(selectedSlot['doctorId']);
   delete selectedSlot["userId"];
   await setDoc(
     doc(db, "Time Slots", selectedSlot.slotId),
     selectedSlot
   );
   await deleteDoc(doc(db, "Booked Time Slots", selectedSlot.slotId));
+  socket.emit("send_patient_cancellation_email", {recipient: auth.currentUser.email, userInfo: userData, selectedSlot: selectedSlot, doctorInfo: doctorInfo});
 }
 
 export default function PatientAppointments() {
@@ -178,7 +182,7 @@ export default function PatientAppointments() {
               <CardFooter className="flex justify-between justify-center">
                 <Button
                   onClick={async () => {
-                    cancelAppointment(appointment);
+                    await cancelAppointment(appointment, userData);
                     let updatedData = await fetchUserAppointments(auth.currentUser.uid);
                     setBookedAppointmentData(updatedData);
                   }}

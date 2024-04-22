@@ -2,6 +2,7 @@ import React, { useState, Component, useEffect } from "react";
 // import '../App.css'
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { io } from "socket.io-client";
 import { formatDate, formatTime } from "./formatutils"
 import { Separator } from "./separator";
 import {
@@ -37,6 +38,8 @@ const firebaseConfig = {
   measurementId: "G-7V9YPQPLEP",
 };
 
+const socket = io("http://localhost:4000");
+const auth = getAuth();
 const app = initializeApp(firebaseConfig);
 const db = getFirestore();
 
@@ -94,8 +97,13 @@ const fetchBookedSlots = async () => {
   return bookedSlots;
 };
 
-const cancelBookedSlot = async (slotId) => {
+const cancelBookedSlot = async (slotId, userData) => {
+  let slotRef = doc(db, "Booked Time Slots", slotId);
+  let slotSnap = await getDoc(slotRef);
+  let slotData = slotSnap.data();
+  const patientInfo = await fetchPatientInfo(slotData["userId"]);
   await deleteDoc(doc(db, "Booked Time Slots", slotId));
+  socket.emit("send_doctor_cancellation_email", {userInfo: patientInfo, selectedSlot: slotData, doctorInfo: userData});
 };
 
 const deleteOpenSlot = async (slotId) => {
@@ -145,9 +153,6 @@ export default function AppointmentView() {
           paddingTop: "20px",
           marginBottom: "10px",
           padding: "10px",
-          //   fontFamily: "Roboto, sans-serif",
-          //   fontSize: "24px",
-          //   fontWeight: "bold",
         }}
       >
         Booked Slots
@@ -192,7 +197,7 @@ export default function AppointmentView() {
               <CardFooter className="flex justify-between justify-center">
                 <Button
                   onClick={async () => {
-                    cancelBookedSlot(slot.id);
+                    cancelBookedSlot(slot.id, userData);
                     let updatedData = await fetchBookedSlots();
                     setBookedSlotData(updatedData);
                   }}
@@ -212,10 +217,6 @@ export default function AppointmentView() {
           marginTop: "10px",
           paddingTop: "20px",
           marginBottom: "20px",
-          //   borderTop: "1px solid #ccc",
-          //   fontFamily: "Roboto, sans-serif",
-          //   fontSize: "24px",
-          //   fontWeight: "bold",
           padding: "10px",
         }}
       >

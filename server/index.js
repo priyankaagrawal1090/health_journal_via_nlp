@@ -198,7 +198,68 @@ io.on("connection", (socket) => {
                 console.log(info.response);
             }
         });
-    })
+    });
+    socket.on("send_patient_cancellation_email", (data, callback) => {
+        const patientMailDetails = {
+            from: 'ganeshsusarla01@gmail.com',
+            to: data.recipient,
+            subject: 'Appointment Cancel Confirmation',
+            html: `<h1>Appointment Cancellation</h1>
+            <p>This is a confirmation email to notify you that your appointment on ${formatDate(data.selectedSlot.slotDate)} with Dr. ${data.doctorInfo.firstName + " " + data.doctorInfo.lastName} from ${formatTime(data.selectedSlot.startTime)} to ${formatTime(data.selectedSlot.endTime)} has been cancelled.</p>
+            <br>
+            <p>Thank you,</p>
+            <p>Health Journal Team</p>`,
+        }
+
+        const doctorMailDetails = {
+            from: 'ganeshsusarla01@gmail.com',
+            to: data.doctorInfo.email,
+            subject: 'Appointment Cancellation',
+            html: `<h1>Appointment Canceled</h1>
+            <p>This is a confirmation email to notify you that your appointment on ${formatDate(data.selectedSlot.slotDate)} with ${data.userInfo.firstName + " " + data.userInfo.lastName} from ${formatTime(data.selectedSlot.startTime)} to ${formatTime(data.selectedSlot.endTime)} has been cancelled.</p>
+            <br>
+            <p>Thank you,</p>
+            <p>Health Journal Team</p>`,
+        }
+
+        transporter.sendMail(patientMailDetails, (err, info) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(info.response);
+            }
+        });
+
+        transporter.sendMail(doctorMailDetails, (err, info) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(info.response);
+            }
+        });
+    });
+
+    socket.on("send_doctor_cancellation_email", (data, callback) => {
+        const patientMailDetails = {
+            from: 'ganeshsusarla01@gmail.com',
+            to: data.userInfo.email,
+            subject: 'Appointment Cancel Notification',
+            html: `<h1>Appointment Cancellation</h1>
+            <p>This email is to notify you that your appointment on ${formatDate(data.selectedSlot.slotDate)} with Dr. ${data.doctorInfo.firstName + " " + data.doctorInfo.lastName} from ${formatTime(data.selectedSlot.startTime)} to ${formatTime(data.selectedSlot.endTime)} has been cancelled.</p>
+            <br>
+            <p>Thank you,</p>
+            <p>Health Journal Team</p>`,
+        }
+
+        transporter.sendMail(patientMailDetails, (err, info) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(info.response);
+            }
+        });
+    });
+
 })
 
 server.listen(4000, () => {

@@ -544,6 +544,7 @@ const Chatbox = (props) => {
                   let selectedSlot = filteredTimeSlots.filter(
                     (slot) => slot.slotId === selectedSlotId
                   );
+                  let doctorInfo = await fetchDoctorById(selectedSlot[0]['doctorId']);
                   delete selectedSlot[0]["userId"];
                   await setDoc(
                     doc(db, "Time Slots", selectedSlotId),
@@ -560,6 +561,7 @@ const Chatbox = (props) => {
                       },
                     ];
                   });
+                  socket.emit("send_patient_cancellation_email", {recipient: auth.currentUser.email, userInfo: userData, selectedSlot: selectedSlot[0], doctorInfo: doctorInfo});
                   setUserInput("");
                   resetState();
                   setLoading(false);
