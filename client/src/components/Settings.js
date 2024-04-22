@@ -467,13 +467,12 @@ const Settings = (props) => {
                                 await uploadBytes(pfpRef, profileImage).then(async () => {
                                   console.log('success')
                                   await getDownloadURL(pfpRef).then(async (url) => {
+                                    await updateDoc(doc(db, "Users", auth.currentUser.uid), {profilePhotoLink: url});
                                     await updateProfile(auth.currentUser, {
                                       photoURL: url
-                                    }).then(() => {
-
-                                    }).catch((err) => {
+                                    }).then(() => {}).catch((err) => {
                                       console.log(err);
-                                    })
+                                    });
                                   })
                                 }).catch((err) => {
                                   console.log(err);

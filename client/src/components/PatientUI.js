@@ -10,6 +10,7 @@ import Settings from "./Settings";
 import Chatbox from "./Chatbox";
 import "../App.css";
 import PatientAppointments from "./PatientAppointments";
+import ViewDoctors from "./ViewDoctors";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDvXnjcl4fyhzIXxhN-NSJFom3DLonoih0",
@@ -74,6 +75,10 @@ const PatientUI = () => {
             <Route
               path="/view-appointments"
               element={<PatientAppointments userID={userData.uid} />}
+            />
+            <Route
+              path="/view-doctors"
+              element={<ViewDoctors userID={userData.uid} />}
             />
           </Routes>
         </div>

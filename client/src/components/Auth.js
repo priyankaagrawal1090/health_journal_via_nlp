@@ -784,6 +784,7 @@ const Auth = () => {
                           uid: user.uid,
                           email: user.email,
                           pNum: userPhoneNum,
+                          profilePhotoLink: "", 
                           gender: userGender,
                           firstName: userFirstName,
                           lastName: userLastName,
