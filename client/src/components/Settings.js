@@ -31,11 +31,13 @@ import { Textarea } from "./textarea";
 import { useToast } from "./use-toast";
 import { Loader2 } from "lucide-react";
 import { doc, getFirestore, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL, getStorage } from "firebase/storage"
 import {
   getAuth,
   reauthenticateWithCredential,
   updateEmail,
   updatePassword,
+  updateProfile,
   EmailAuthProvider,
   GoogleAuthProvider,
   reauthenticateWithPopup,
@@ -59,6 +61,7 @@ const checkPhone = (phone) => {
 const Settings = (props) => {
   const db = getFirestore();
   const auth = getAuth();
+  const storage = getStorage();
   const googleProvider = new GoogleAuthProvider();
   const { toast } = useToast();
   const [firstName, setFirstName] = useState("");
@@ -66,6 +69,7 @@ const Settings = (props) => {
   const [bio, setBio] = useState("");
   const [gender, setGender] = useState("");
   const [email, setEmail] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
   const [currPassword, setCurrPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -220,6 +224,12 @@ const Settings = (props) => {
                     />
                   </div>
                 )}
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="pfp">Picture</Label>
+                  <Input className="text-white" id="pfp" type="file" accept="image/*" onChange={(e) => {
+                    setProfileImage(e.target.files[0])
+                  }} />
+                </div>
               </div>
             </form>
           </CardContent>
@@ -257,6 +267,7 @@ const Settings = (props) => {
                             let fNameNotBlank = firstName !== "";
                             let lNameNotBlank = lastName !== "";
                             let genderNotBlank = gender !== "";
+                            let picNotBlank = profileImage !== null;
                             let bioNotBlank = bio !== "";
 
                             if (phoneNotBlank) {
@@ -286,7 +297,25 @@ const Settings = (props) => {
                               await updateDoc(userRef, { gender: gender });
                             }
                             if (bioNotBlank) {
-                              await updateDoc(userRef, {bio: bio});
+                              await updateDoc(userRef, { bio: bio });
+                            }
+                            if (picNotBlank) {
+                              const pfpRef = ref(storage, `images/${auth.currentUser.uid}`);
+                              await uploadBytes(pfpRef, profileImage).then(async () => {
+                                await getDownloadURL(pfpRef).then(async (url) => {
+                                  await updateProfile(auth.currentUser, {
+                                    photoURL: url
+                                  }).then(() => {
+
+                                  }).catch((err) => {
+                                    console.log(err);
+                                  })
+                                }).catch((err) => {
+                                  console.log(err);
+                                })
+                              }).catch((err) => {
+                                console.log(err);
+                              })
                             }
 
                             setFirstName("");
@@ -304,7 +333,7 @@ const Settings = (props) => {
                                 "An error has occurred while reauthenticating",
                             });
                           });
-                          setLoading(false);
+                        setLoading(false);
                       }
                     }}
                   >
@@ -363,6 +392,7 @@ const Settings = (props) => {
                               let fNameNotBlank = firstName !== "";
                               let lNameNotBlank = lastName !== "";
                               let bioNotBlank = bio !== "";
+                              let pfpNotBlank = profileImage !== null;
                               let genderNotBlank = gender !== "";
                               let passwordNotBlank = password !== "";
 
@@ -429,8 +459,25 @@ const Settings = (props) => {
                               if (genderNotBlank) {
                                 await updateDoc(userRef, { gender: gender });
                               }
-                              if(bioNotBlank) {
-                                await updateDoc(userRef, {bio: bio});
+                              if (bioNotBlank) {
+                                await updateDoc(userRef, { bio: bio });
+                              }
+                              if (pfpNotBlank) {
+                                const pfpRef = ref(storage, `images/${auth.currentUser.uid}`);
+                                await uploadBytes(pfpRef, profileImage).then(async () => {
+                                  console.log('success')
+                                  await getDownloadURL(pfpRef).then(async (url) => {
+                                    await updateProfile(auth.currentUser, {
+                                      photoURL: url
+                                    }).then(() => {
+
+                                    }).catch((err) => {
+                                      console.log(err);
+                                    })
+                                  })
+                                }).catch((err) => {
+                                  console.log(err);
+                                })
                               }
 
                               if (passwordNotBlank) {
@@ -463,6 +510,7 @@ const Settings = (props) => {
                               setPassword("");
                               setGender("");
                               setBio("");
+                              setProfileImage(null);
                               setCurrPassword("");
                               setPopupLoading(false);
                               setDialogOpen(false);

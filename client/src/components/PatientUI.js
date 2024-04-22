@@ -50,6 +50,7 @@ const PatientUI = () => {
         <div>
           <PatientSidebar
             userEmail={userData.email}
+            pfp={auth.currentUser.photoURL}
             logOut={() => {
               signOut(auth)
                 .then(() => {

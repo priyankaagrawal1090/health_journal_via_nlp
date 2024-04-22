@@ -1,5 +1,10 @@
 import React, { useState, Component } from "react";
 import { BrowserRouter as Router, Route, Link, Routes } from "react-router-dom";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "./avatar"
 import "../App.css";
 
 export function HorizontalNavbar() {
@@ -202,7 +207,13 @@ export function DoctorSidebar(props) {
         </ul>
         <div class="mt-auto flex">
           <div class="flex w-full justify-between">
-            <div className="w-7/12 truncate">
+            <div>
+              <Avatar>
+                <AvatarImage src={props.pfp} alt="profile-pic" />
+                <AvatarFallback>HJ</AvatarFallback>
+              </Avatar>
+            </div>
+            <div className="mt-1 w-7/12 truncate">
               <span class="text-xs font-medium text-black dark:text-white">
                 {props.userEmail}
               </span>
@@ -350,7 +361,13 @@ export function PatientSidebar(props) {
         </ul>
         <div class="mt-auto flex">
           <div class="flex w-full justify-between">
-            <div className="w-7/12 truncate">
+            <div>
+              <Avatar>
+                <AvatarImage src={props.pfp} alt="profile-pic" />
+                <AvatarFallback>HJ</AvatarFallback>
+              </Avatar>
+            </div>
+            <div className="mt-1 w-7/12 truncate">
               <span class="text-xs font-medium text-black dark:text-white">
                 {props.userEmail}
               </span>

@@ -53,7 +53,10 @@ export default function DoctorUI() {
           </div> :
           <div className='h-screen relative'>
             {/* <div className="absolute div-sidebar"> */}
-              <DoctorSidebar userEmail={userData.email} logOut={() => {
+              <DoctorSidebar 
+              userEmail={userData.email} 
+              pfp={auth.currentUser.photoURL}
+              logOut={() => {
                 signOut(auth).then(() => {
                   navigate("/auth");
                 }).catch((error) => {
