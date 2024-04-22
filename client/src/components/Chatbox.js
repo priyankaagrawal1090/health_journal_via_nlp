@@ -63,6 +63,7 @@ const db = getFirestore();
 
 const Chatbox = (props) => {
   const [messages, setMessages] = useState([]);
+  const [userData, setUserData] = useState({});
   const [enabledDates, setEnabledDates] = useState([]);
   const [filteredTimeSlots, setFilteredTimeSlots] = useState([]);
   const [doctorsForSelectedDate, setDoctorsForSelectedDate] = useState([]);
@@ -93,6 +94,27 @@ const Chatbox = (props) => {
       setFilteredTimeSlots(data.userSlots);
     });
   }, [socket]);
+
+  useEffect(() => {
+    async function fetchUser() {
+      let data = await fetchUserData();
+      setUserData(data);
+    }
+    fetchUser();
+  }, []);
+
+  const fetchUserData = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      const userDataPatientRef = doc(db, "Users", user.uid);
+      const userDataPatientSnap = await getDoc(userDataPatientRef);
+      if (userDataPatientSnap.exists()) {
+        return userDataPatientSnap.data();
+      } else {
+        return null;
+      }
+    }
+  };
 
   const handleInputChange = (e) => {
     setUserInput(e.target.value);
@@ -702,7 +724,7 @@ const Chatbox = (props) => {
                       user: "bot",
                     },
                   ];
-                  socket.emit("send_confirmation_email", {recipient: auth.currentUser.email, selectedSlot: selectedSlot[0], doctorInfo: doctorInfo});
+                  socket.emit("send_confirmation_email", {recipient: auth.currentUser.email, userInfo: userData, selectedSlot: selectedSlot[0], doctorInfo: doctorInfo});
                   setMessages(updateMessages);
                   setUserInput("");
                   setLoading(false);

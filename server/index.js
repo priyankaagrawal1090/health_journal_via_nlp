@@ -147,7 +147,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("send_confirmation_email", (data, callback) => {
-        const mailDetails = {
+        const patientMailDetails = {
             from: 'ganeshsusarla01@gmail.com',
             to: data.recipient,
             subject: 'Appointment Booking Confirmation',
@@ -165,13 +165,39 @@ io.on("connection", (socket) => {
             <p>Health Journal Team</p>`,
         }
 
-        transporter.sendMail(mailDetails, (err, info) => {
+        const doctorMailDetails = {
+            from: 'ganeshsusarla01@gmail.com',
+            to: data.doctorInfo.email,
+            subject: 'Appointment Booking Confirmation',
+            html: `<h1>Appointment Booked!</h1>
+            <p>This is a confirmation email to notify that you that one of your appointment slots has been booked.</p>
+            <p>Patient Name: ${data.userInfo.firstName + " " + data.userInfo.lastName} </p>
+            <p>Patient Phone Number: ${data.userInfo.pNum}</p>
+            <p>Appointment Date: ${formatDate(data.selectedSlot.slotDate)}</p>
+            <p>Appointment Start Time: ${formatTime(data.selectedSlot.startTime)}</p>
+            <p>Appointment End Time: ${formatTime(data.selectedSlot.endTime)}</p>
+            <br>
+            <p>Please be prepared to call your patient by phone on the day of your appointment.</p>
+            <br>
+            <p>Thank you,</p>
+            <p>Health Journal Team</p>`,
+        }
+
+        transporter.sendMail(patientMailDetails, (err, info) => {
             if (err) {
                 console.log(err)
             } else {
                 console.log(info.response);
             }
-        })
+        });
+
+        transporter.sendMail(doctorMailDetails, (err, info) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(info.response);
+            }
+        });
     })
 })
 
