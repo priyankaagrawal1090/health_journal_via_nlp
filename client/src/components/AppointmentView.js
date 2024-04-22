@@ -11,6 +11,7 @@ import {
   doc,
   getDocs,
   getDoc,
+  setDoc,
   deleteDoc,
   query,
   where,
@@ -78,7 +79,7 @@ const fetchOpenSlots = async () => {
       let docData = document.data();
       let currDate = new Date();
       let slotDate = new Date(docData.slotDate);
-      if(currDate >= slotDate) {
+      if (currDate >= slotDate) {
         let docRef = doc(db, "Time Slots", document.id);
         await deleteDoc(docRef)
       } else {
@@ -88,6 +89,21 @@ const fetchOpenSlots = async () => {
   }
   return openSlots;
 };
+
+const getAppointmentDate = (data) => {
+  const dateSplit = data.slotDate.split('-');
+  const startTimeSplit = data.startTime.split(':');
+  console.log(dateSplit);
+  const date = new Date(parseInt(dateSplit[0]), parseInt(dateSplit[1]) - 1, parseInt(dateSplit[2]), parseInt(startTimeSplit[0]), parseInt(startTimeSplit[1]))
+  return date;
+}
+
+const addToPastAppointments = async (apptId, data) => {
+  const pastAppointmentsRef = doc(db, "Past Appointments", apptId);
+  const bookedAppointmentRef = doc(db, "Booked Time Slots", apptId);
+  await setDoc(pastAppointmentsRef, data);
+  await deleteDoc(bookedAppointmentRef);
+}
 
 const fetchBookedSlots = async () => {
   const bookedSlots = [];
@@ -99,7 +115,15 @@ const fetchBookedSlots = async () => {
     );
     const slotQuerySnap = await getDocs(slotQuery);
     slotQuerySnap.forEach((doc) => {
-      bookedSlots.push({ id: doc.id, ...doc.data() });
+      let data = doc.data();
+      const apptDate = getAppointmentDate(data);
+      const currDate = new Date();
+      if (currDate > apptDate) {
+        console.log('Moving to past appointments!');
+        addToPastAppointments(doc.id, data);
+      } else {
+        bookedSlots.push({ id: doc.id, ...data });
+      }
     });
   }
   return bookedSlots;
@@ -111,7 +135,7 @@ const cancelBookedSlot = async (slotId, userData) => {
   let slotData = slotSnap.data();
   const patientInfo = await fetchPatientInfo(slotData["userId"]);
   await deleteDoc(doc(db, "Booked Time Slots", slotId));
-  socket.emit("send_doctor_cancellation_email", {userInfo: patientInfo, selectedSlot: slotData, doctorInfo: userData});
+  socket.emit("send_doctor_cancellation_email", { userInfo: patientInfo, selectedSlot: slotData, doctorInfo: userData });
 };
 
 const deleteOpenSlot = async (slotId) => {
@@ -133,11 +157,11 @@ export default function AppointmentView() {
   useEffect(() => {
     async function fetchBookedSlotsData() {
       let data = await fetchBookedSlots();
-      for(let i = 0; i < data.length; i++) {
+      for (let i = 0; i < data.length; i++) {
         let patientData = await fetchPatientInfo(data[i].userId);
         data[i]["patientName"] = patientData.firstName + " " + patientData.lastName
         data[i]["patientPhone"] = patientData.pNum
-      }      
+      }
       setBookedSlotData(data);
     }
     fetchBookedSlotsData();
@@ -180,7 +204,7 @@ export default function AppointmentView() {
               </CardHeader>
               <CardContent>
                 <div className="grid w-full items-center gap-4">
-                <div className="flex flex-col space-y-1.5">
+                  <div className="flex flex-col space-y-1.5">
                     <Label>Patient Name:</Label>
                     <p>{slot.patientName}</p>
                   </div>

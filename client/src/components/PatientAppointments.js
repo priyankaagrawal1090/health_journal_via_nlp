@@ -55,10 +55,21 @@ const fetchUserData = async () => {
   }
 };
 
-const addToPastAppointments = async (apptId, data) => {
-  const pastAppointmentsRef = doc(db, "Past Appointments", auth.currentUser.uid, "");
-  await setDoc(pastAppointmentsRef, {});
+const getAppointmentDate = (data) => {
+  const dateSplit = data.slotDate.split('-');
+  const startTimeSplit = data.startTime.split(':');
+  console.log(dateSplit);
+  const date = new Date(parseInt(dateSplit[0]), parseInt(dateSplit[1]) - 1, parseInt(dateSplit[2]), parseInt(startTimeSplit[0]), parseInt(startTimeSplit[1]))
+  return date;
 }
+
+const addToPastAppointments = async (apptId, data) => {
+  const pastAppointmentsRef = doc(db, "Past Appointments", apptId);
+  const bookedAppointmentRef = doc(db, "Booked Time Slots", apptId);
+  await setDoc(pastAppointmentsRef, data);
+  await deleteDoc(bookedAppointmentRef);
+}
+
 const fetchUserAppointments = async (userId) => {
   const patientAppointments = [];
   const patientTimeSlotsQuery = query(
@@ -68,13 +79,15 @@ const fetchUserAppointments = async (userId) => {
   const patientTimeSlotsQuerySnap = await getDocs(patientTimeSlotsQuery);
   patientTimeSlotsQuerySnap.forEach((doc) => {
     let data = doc.data();
-    const apptDate = new Date(data.slotDate);
+    const apptDate = getAppointmentDate(data);
+    console.log(apptDate);
     const currDate = new Date();
-    // if (currDate > apptDate) {
-
-    // } else {
+    if (currDate > apptDate) {
+      console.log('Moving to past appointments!');
+      addToPastAppointments(doc.id, data);
+    } else {
       patientAppointments.push(data);
-    // };
+    }
   });
   return patientAppointments;
 };
@@ -100,7 +113,7 @@ const cancelAppointment = async (selectedSlot, userData) => {
     selectedSlot
   );
   await deleteDoc(doc(db, "Booked Time Slots", selectedSlot.slotId));
-  socket.emit("send_patient_cancellation_email", {recipient: auth.currentUser.email, userInfo: userData, selectedSlot: selectedSlot, doctorInfo: doctorInfo});
+  socket.emit("send_patient_cancellation_email", { recipient: auth.currentUser.email, userInfo: userData, selectedSlot: selectedSlot, doctorInfo: doctorInfo });
 }
 
 export default function PatientAppointments() {
@@ -118,7 +131,7 @@ export default function PatientAppointments() {
   useEffect(() => {
     async function fetchBookedAppointmentsData() {
       let data = await fetchUserAppointments(auth.currentUser.uid);
-      for(let i = 0; i < data.length; i++) {
+      for (let i = 0; i < data.length; i++) {
         let doctorData = await fetchDoctorInfo(data[i].doctorId);
         data[i]["doctorName"] = doctorData.firstName + " " + doctorData.lastName
         data[i]["doctorPhone"] = doctorData.pNum

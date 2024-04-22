@@ -18,9 +18,6 @@ export function HorizontalNavbar() {
         <Link to="/home" className="nav-items">
           Home
         </Link>
-        {/* <Link to="/about" className="nav-items">
-          About
-        </Link> */}
         <Link to="/signin" className="nav-items">
           Sign in
         </Link>
