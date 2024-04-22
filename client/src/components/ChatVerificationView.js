@@ -126,6 +126,7 @@ export default function ChatVerificationView() {
                 <Alert className="w-2/4 mt-5">
                   <BotMessageSquare className="h-4 w-4" />
                   <AlertTitle>Unverified Message</AlertTitle>
+                  <AlertDescription><strong>Question:</strong> {message.question}</AlertDescription>
                   <AlertDescription>{message.message}</AlertDescription>
                   <AlertDialog>
                     <AlertDialogTrigger asChild className="ml-6 mt-2">

@@ -1,5 +1,4 @@
 import React, { useState, Component, useEffect } from "react";
-// import '../App.css'
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { formatDate, formatTime } from "./formatutils";
@@ -14,11 +13,11 @@ import {
   deleteDoc,
   query,
   where,
+  addDoc,
 } from "firebase/firestore";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -53,6 +52,11 @@ const fetchUserData = async () => {
     }
   }
 };
+
+const addToPastAppointments = async (apptId, data) => {
+  const pastAppointmentsRef = doc(db, "Past Appointments", auth.currentUser.uid, "");
+  await setDoc(pastAppointmentsRef, {});
+}
 const fetchUserAppointments = async (userId) => {
   const patientAppointments = [];
   const patientTimeSlotsQuery = query(
@@ -62,7 +66,13 @@ const fetchUserAppointments = async (userId) => {
   const patientTimeSlotsQuerySnap = await getDocs(patientTimeSlotsQuery);
   patientTimeSlotsQuerySnap.forEach((doc) => {
     let data = doc.data();
-    patientAppointments.push(data);
+    const apptDate = new Date(data.slotDate);
+    const currDate = new Date();
+    // if (currDate > apptDate) {
+
+    // } else {
+      patientAppointments.push(data);
+    // };
   });
   return patientAppointments;
 };
@@ -124,9 +134,6 @@ export default function PatientAppointments() {
           paddingTop: "20px",
           marginBottom: "10px",
           padding: "10px",
-          //   fontFamily: "Roboto, sans-serif",
-          //   fontSize: "24px",
-          //   fontWeight: "bold",
         }}
       >
         Booked Appointments

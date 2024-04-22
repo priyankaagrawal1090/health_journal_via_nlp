@@ -104,11 +104,12 @@ const fetchBookTimes = async (date, patientId) => {
 io.on("connection", (socket) => {
     socket.on("send_message", async (data, callback) => {
         const messagesRef = collection(db, "chatbot messages");
-        const messageQuery = query(messagesRef, where("message", "==", data.message));
+        const messageQuery = query(messagesRef, where("question", "==", data.question));
         const messageSnapshot = await getDocs(messageQuery);
         if (messageSnapshot.empty) {
             console.log('Adding new message to database', data.message);
             const newMessage = {
+                question: data.question,
                 message: data.message,
                 verified: false,
             }

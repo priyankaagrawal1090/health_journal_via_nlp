@@ -186,11 +186,11 @@ const Chatbox = (props) => {
     return !enabledDates.includes(moment(date).format("YYYY-MM-DD"));
   };
 
-  const fetchChatbotMessage = async (message) => {
+  const fetchChatbotMessage = async (userQuestion) => {
     const chatbotMessages = [];
     const chatbotMessageQuery = query(
       collection(db, "chatbot messages"),
-      where("message", "==", message)
+      where("question", "==", userQuestion)
     );
     const chatbotMessageQuerySnap = await getDocs(chatbotMessageQuery);
     chatbotMessageQuerySnap.forEach((doc) => {
@@ -247,18 +247,19 @@ const Chatbox = (props) => {
       let chatResponse = await fetchChatResponse(userQuestion);
       socket.emit(
         "send_message",
-        { message: chatResponse.replace(/\n/g, "") },
+        { question: userInput, message: chatResponse.replace(/\n/g, "") },
         async (response) => {
           if (response.status == "success") {
             let chatbotMessages = await fetchChatbotMessage(
-              chatResponse.replace(/\n/g, "")
+              userInput
+              // chatResponse.replace(/\n/g, "")
             );
             let chatbotMessage = chatbotMessages[0];
             setMessages((prevMessages) => {
               return [
                 ...prevMessages,
                 {
-                  text: chatResponse,
+                  text: chatbotMessage.message,
                   user: "bot",
                   verified: chatbotMessage.verified,
                   userIntent: "chat",
@@ -270,10 +271,10 @@ const Chatbox = (props) => {
       );
     } else if (userIntent === "search for resources") {
       let urls = await fetchResources(userInput);
-      socket.emit("send_message", { message: urls }, async (response) => {
+      socket.emit("send_message", { question: userInput,  message: urls }, async (response) => {
         console.log("Emitted successfully");
         if (response.status == "success") {
-          let chatbotMessages = await fetchChatbotMessage(urls);
+          let chatbotMessages = await fetchChatbotMessage(userInput);
           let chatbotMessage = chatbotMessages[0];
           console.log("URLS: ", chatbotMessage);
           setMessages((prevMessages) => {
