@@ -74,8 +74,16 @@ const fetchOpenSlots = async () => {
       where("doctorId", "==", user.uid)
     );
     const slotQuerySnap = await getDocs(slotQuery);
-    slotQuerySnap.forEach((doc) => {
-      openSlots.push({ id: doc.id, ...doc.data() });
+    slotQuerySnap.forEach(async (document) => {
+      let docData = document.data();
+      let currDate = new Date();
+      let slotDate = new Date(docData.slotDate);
+      if(currDate >= slotDate) {
+        let docRef = doc(db, "Time Slots", document.id);
+        await deleteDoc(docRef)
+      } else {
+        openSlots.push({ id: document.id, ...docData });
+      }
     });
   }
   return openSlots;
