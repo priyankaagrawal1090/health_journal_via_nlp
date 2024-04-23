@@ -216,6 +216,7 @@ const Settings = (props) => {
                     <Label htmlFor="bio">Bio</Label>
                     <Textarea
                       id="bio"
+                      disabled={loading}
                       placeholder="Enter your bio here"
                       value={bio}
                       onChange={(e) => {
@@ -226,7 +227,7 @@ const Settings = (props) => {
                 )}
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="pfp">Picture</Label>
-                  <Input className="text-white" id="pfp" type="file" accept="image/*" onChange={(e) => {
+                  <Input disabled={loading} className="text-white" id="pfp" type="file" accept="image/*" onChange={(e) => {
                     setProfileImage(e.target.files[0])
                   }} />
                 </div>
@@ -307,7 +308,7 @@ const Settings = (props) => {
                                   await updateProfile(auth.currentUser, {
                                     photoURL: url
                                   }).then(async () => {
-                                    await updateDoc(doc(db, "Users", auth.currentUser.uid), {profilePhotoLink: auth.currentUser.photoURL});
+                                    await updateDoc(doc(db, "Users", auth.currentUser.uid), { profilePhotoLink: auth.currentUser.photoURL });
                                   }).catch((err) => {
                                     console.log(err);
                                   })
@@ -472,7 +473,7 @@ const Settings = (props) => {
                                     await updateProfile(auth.currentUser, {
                                       photoURL: url
                                     }).then(async () => {
-                                      await updateDoc(doc(db, "Users", auth.currentUser.uid), {profilePhotoLink: auth.currentUser.photoURL});
+                                      await updateDoc(doc(db, "Users", auth.currentUser.uid), { profilePhotoLink: auth.currentUser.photoURL });
                                     }).catch((err) => {
                                       console.log(err);
                                     });
