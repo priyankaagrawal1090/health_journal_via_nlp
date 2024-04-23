@@ -4,6 +4,7 @@ import { getAuth } from "firebase/auth";
 import { io } from "socket.io-client";
 import { formatDate, formatTime } from "./formatutils";
 import { Separator } from "./separator";
+import ClipLoader from "react-spinners/ClipLoader";
 import {
   getFirestore,
   collection,
@@ -92,10 +93,6 @@ const fetchUserAppointments = async (userId) => {
   return patientAppointments;
 };
 
-const cancelBookedAppointment = async (appointmentId) => {
-  await deleteDoc(doc(db, "Booked Appointments", appointmentId));
-};
-
 const fetchDoctorInfo = async (doctorId) => {
   const doctorDocRef = doc(db, "Users", doctorId);
   const doctorDataSnap = await getDoc(doctorDocRef);
@@ -118,6 +115,7 @@ const cancelAppointment = async (selectedSlot, userData) => {
 
 export default function PatientAppointments() {
   const [userData, setUserData] = useState({});
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [bookedAppointmentData, setBookedAppointmentData] = useState([]);
 
   useEffect(() => {
@@ -138,7 +136,9 @@ export default function PatientAppointments() {
       }
       setBookedAppointmentData(data);
     }
+    setLoadingAppointments(true);
     fetchBookedAppointmentsData();
+    setLoadingAppointments(false);
   }, []);
 
   const hasBookedAppointments = bookedAppointmentData.length != 0;
@@ -162,51 +162,59 @@ export default function PatientAppointments() {
         </h3>
       )}
       <div className="ml-64 px-2 appointment-view-container grid grid-cols-5 gap-1 justify-evenly flex justify-center items-center">
-        {bookedAppointmentData.map((appointment) => (
-          <div className="appointment-card-container">
-            <Card className="w-[250px]">
-              <CardHeader>
-                <CardTitle>Booked Appointment</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid w-full items-center gap-4">
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>Doctor Name:</Label>
-                    <p>{appointment.doctorName}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>Doctor Phone:</Label>
-                    <p>{appointment.doctorPhone}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>Slot Date:</Label>
-                    <p>{formatDate(appointment.slotDate)}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>Start Time:</Label>
-                    <p>{formatTime(appointment.startTime)}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>End Time:</Label>
-                    <p>{formatTime(appointment.endTime)}</p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between justify-center">
-                <Button
-                  onClick={async () => {
-                    await cancelAppointment(appointment, userData);
-                    let updatedData = await fetchUserAppointments(auth.currentUser.uid);
-                    setBookedAppointmentData(updatedData);
-                  }}
-                >
-                  Cancel Appointment
-                </Button>
-              </CardFooter>
-            </Card>
-            <br />
+        {loadingAppointments ? (
+          <div className="flex h-screen justify-center items-center">
+            <ClipLoader size={30} color={"#334155"} loading={loadingAppointments} />
           </div>
-        ))}
+        ) : (
+          bookedAppointmentData.map((appointment) => (
+            <div className="appointment-card-container">
+              <Card className="w-[250px]">
+                <CardHeader>
+                  <CardTitle>Booked Appointment</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid w-full items-center gap-4">
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>Doctor Name:</Label>
+                      <p>{appointment.doctorName}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>Doctor Phone:</Label>
+                      <p>{appointment.doctorPhone}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>Slot Date:</Label>
+                      <p>{formatDate(appointment.slotDate)}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>Start Time:</Label>
+                      <p>{formatTime(appointment.startTime)}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>End Time:</Label>
+                      <p>{formatTime(appointment.endTime)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between justify-center">
+                  <Button
+                    onClick={async () => {
+                      await cancelAppointment(appointment, userData);
+                      setLoadingAppointments(true);
+                      let updatedData = await fetchUserAppointments(auth.currentUser.uid);
+                      setLoadingAppointments(false);
+                      setBookedAppointmentData(updatedData);
+                    }}
+                  >
+                    Cancel Appointment
+                  </Button>
+                </CardFooter>
+              </Card>
+              <br />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
