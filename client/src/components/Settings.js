@@ -303,10 +303,11 @@ const Settings = (props) => {
                               const pfpRef = ref(storage, `images/${auth.currentUser.uid}`);
                               await uploadBytes(pfpRef, profileImage).then(async () => {
                                 await getDownloadURL(pfpRef).then(async (url) => {
+                                  console.log(url);
                                   await updateProfile(auth.currentUser, {
                                     photoURL: url
-                                  }).then(() => {
-
+                                  }).then(async () => {
+                                    await updateDoc(doc(db, "Users", auth.currentUser.uid), {profilePhotoLink: auth.currentUser.photoURL});
                                   }).catch((err) => {
                                     console.log(err);
                                   })
@@ -467,10 +468,12 @@ const Settings = (props) => {
                                 await uploadBytes(pfpRef, profileImage).then(async () => {
                                   console.log('success')
                                   await getDownloadURL(pfpRef).then(async (url) => {
-                                    await updateDoc(doc(db, "Users", auth.currentUser.uid), {profilePhotoLink: url});
+                                    console.log(url);
                                     await updateProfile(auth.currentUser, {
                                       photoURL: url
-                                    }).then(() => {}).catch((err) => {
+                                    }).then(async () => {
+                                      await updateDoc(doc(db, "Users", auth.currentUser.uid), {profilePhotoLink: auth.currentUser.photoURL});
+                                    }).catch((err) => {
                                       console.log(err);
                                     });
                                   })
