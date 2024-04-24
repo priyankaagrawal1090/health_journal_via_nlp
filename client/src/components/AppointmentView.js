@@ -16,6 +16,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import ClipLoader from "react-spinners/ClipLoader";
 import PendingAppointmentCard from "./PendingAppointmentCard";
 import {
   Card,
@@ -105,27 +106,24 @@ const addToPastAppointments = async (apptId, data) => {
   await deleteDoc(bookedAppointmentRef);
 }
 
-const fetchBookedSlots = async () => {
+const fetchBookedSlots = async (userId) => {
   const bookedSlots = [];
-  const user = getAuth().currentUser;
-  if (user) {
-    const slotQuery = query(
-      collection(db, "Booked Time Slots"),
-      where("doctorId", "==", user.uid)
-    );
-    const slotQuerySnap = await getDocs(slotQuery);
-    slotQuerySnap.forEach((doc) => {
-      let data = doc.data();
-      const apptDate = getAppointmentDate(data);
-      const currDate = new Date();
-      if (currDate > apptDate) {
-        console.log('Moving to past appointments!');
-        addToPastAppointments(doc.id, data);
-      } else {
-        bookedSlots.push({ id: doc.id, ...data });
-      }
-    });
-  }
+  const slotQuery = query(
+    collection(db, "Booked Time Slots"),
+    where("doctorId", "==", userId)
+  );
+  const slotQuerySnap = await getDocs(slotQuery);
+  slotQuerySnap.forEach((doc) => {
+    let data = doc.data();
+    const apptDate = getAppointmentDate(data);
+    const currDate = new Date();
+    if (currDate > apptDate) {
+      console.log('Moving to past appointments!');
+      addToPastAppointments(doc.id, data);
+    } else {
+      bookedSlots.push({ id: doc.id, ...data });
+    }
+  });
   return bookedSlots;
 };
 
@@ -162,6 +160,8 @@ export default function AppointmentView() {
   const [bookedSlotData, setBookedSlotData] = useState([]);
   const [pastAppointmentData, setPastAppointmentData] = useState([]);
 
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
+
   useEffect(() => {
     async function fetchUser() {
       let data = await fetchUserData();
@@ -172,7 +172,7 @@ export default function AppointmentView() {
 
   useEffect(() => {
     async function fetchBookedSlotsData() {
-      let data = await fetchBookedSlots();
+      let data = await fetchBookedSlots(auth.currentUser.uid);
       for (let i = 0; i < data.length; i++) {
         let patientData = await fetchPatientInfo(data[i].userId);
         data[i]["patientName"] = patientData.firstName + " " + patientData.lastName
@@ -227,51 +227,59 @@ export default function AppointmentView() {
         </h3>
       )}
       <div className="ml-64 px-2 pending-appointment-view-container grid grid-cols-5 gap-1 justify-evenly flex justify-center items-center">
-        {bookedSlotData.map((slot) => (
-          <div className="pending-appointment-card-container">
-            <Card className="w-[250px]">
-              <CardHeader>
-                <CardTitle>Booked Slot</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid w-full items-center gap-4">
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>Patient Name:</Label>
-                    <p>{slot.patientName}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>Patient Phone:</Label>
-                    <p>{slot.patientPhone}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>Slot Date:</Label>
-                    <p>{formatDate(slot.slotDate)}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>Start Time:</Label>
-                    <p>{formatTime(slot.startTime)}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>End Time:</Label>
-                    <p>{formatTime(slot.endTime)}</p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between justify-center">
-                <Button
-                  onClick={async () => {
-                    cancelBookedSlot(slot.id, userData);
-                    let updatedData = await fetchBookedSlots();
-                    setBookedSlotData(updatedData);
-                  }}
-                >
-                  Cancel Appointment
-                </Button>
-              </CardFooter>
-            </Card>
-            <br />
+        {loadingAppointments ? (
+          <div className="flex h-screen justify-center items-center">
+            <ClipLoader size={30} color={"#334155"} loading={loadingAppointments} />
           </div>
-        ))}
+        ) : (
+          bookedSlotData.map((slot) => (
+            <div className="pending-appointment-card-container">
+              <Card className="w-[250px]">
+                <CardHeader>
+                  <CardTitle>Booked Slot</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid w-full items-center gap-4">
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>Patient Name:</Label>
+                      <p>{slot.patientName}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>Patient Phone:</Label>
+                      <p>{slot.patientPhone}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>Slot Date:</Label>
+                      <p>{formatDate(slot.slotDate)}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>Start Time:</Label>
+                      <p>{formatTime(slot.startTime)}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>End Time:</Label>
+                      <p>{formatTime(slot.endTime)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between justify-center">
+                  <Button
+                    onClick={async () => {
+                      setLoadingAppointments(true);
+                      await cancelBookedSlot(slot.id, userData);
+                      let updatedData = await fetchBookedSlots(auth.currentUser.uid);
+                      setLoadingAppointments(false);
+                      setBookedSlotData(updatedData);
+                    }}
+                  >
+                    Cancel Appointment
+                  </Button>
+                </CardFooter>
+              </Card>
+              <br />
+            </div>
+          ))
+        )}
       </div>
 
       <h2
@@ -288,43 +296,49 @@ export default function AppointmentView() {
       <Separator className="my-4" />
       <div className="ml-64 px-2 upcoming-appointment-view-container grid grid-cols-6 gap-1 justify-evenly flex justify-center items-center">
         {!hasOpenSlots && <h3 className="flex justify-center items-center">No open slots currently</h3>}
-        {openSlotData.map((slot) => (
-          <div className="pending-appointment-card-container">
-            <Card className="w-[250px]">
-              <CardHeader>
-                <CardTitle>Open Slot</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid w-full items-center gap-4">
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>Slot Date:</Label>
-                    <p>{formatDate(slot.slotDate)}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>Start Time:</Label>
-                    <p>{formatTime(slot.startTime)}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1.5">
-                    <Label>End Time:</Label>
-                    <p>{formatTime(slot.endTime)}</p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between justify-center">
-                <Button
-                  onClick={async () => {
-                    deleteOpenSlot(slot.id);
-                    let updatedData = await fetchOpenSlots();
-                    setOpenSlotData(updatedData);
-                  }}
-                >
-                  Delete Slot
-                </Button>
-              </CardFooter>
-            </Card>
-            <br />
+        {loadingAppointments ? (
+          <div className="flex h-screen justify-center items-center">
+            <ClipLoader size={30} color={"#334155"} loading={loadingAppointments} />
           </div>
-        ))}
+        ) : (
+          openSlotData.map((slot) => (
+            <div className="pending-appointment-card-container">
+              <Card className="w-[250px]">
+                <CardHeader>
+                  <CardTitle>Open Slot</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid w-full items-center gap-4">
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>Slot Date:</Label>
+                      <p>{formatDate(slot.slotDate)}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>Start Time:</Label>
+                      <p>{formatTime(slot.startTime)}</p>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label>End Time:</Label>
+                      <p>{formatTime(slot.endTime)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between justify-center">
+                  <Button
+                    onClick={async () => {
+                      deleteOpenSlot(slot.id);
+                      let updatedData = await fetchOpenSlots();
+                      setOpenSlotData(updatedData);
+                    }}
+                  >
+                    Delete Slot
+                  </Button>
+                </CardFooter>
+              </Card>
+              <br />
+            </div>
+          ))
+        )}
       </div>
       <h2
         className="text-3xl font-medium leading-none flex justify-center items-center"

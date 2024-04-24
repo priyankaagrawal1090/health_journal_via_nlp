@@ -23,6 +23,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "./select";
+import { useToast } from "./use-toast";
 import {
     getFirestore,
     collection,
@@ -89,7 +90,8 @@ export default function ViewDoctors() {
 
     const dateMatcher = (date) => { return !enabledDates.includes(moment(date).format("YYYY-MM-DD")); };
     const doctorQuery = query(collection(db, "Users"), where("userType", "==", "doctor"));
-
+    const { toast } = useToast();
+    
     const validateBookAppointmentFields = () => {
         return selectedSlotId !== "";
     };
@@ -272,6 +274,13 @@ export default function ViewDoctors() {
                                                         // remove slot from "time slots" collection
                                                         await deleteDoc(doc(db, "Time Slots", selectedSlotId));
                                                         socket.emit("send_confirmation_email", { recipient: auth.currentUser.email, userInfo: userData, selectedSlot: selectedSlot[0], doctorInfo: doctorInfo });
+                                                        toast({
+                                                            title: "Booked Appointment!",
+                                                            description: "Successfully booked appointment!",
+                                                          });
+                                                        setDoctorOpenSlots([]);
+                                                        setSelectedSlotId("");
+                                                        setDate(new Date());
                                                         setSubmitLoading(false);
                                                     }}>Book Appointment</Button>
                                                 )}
