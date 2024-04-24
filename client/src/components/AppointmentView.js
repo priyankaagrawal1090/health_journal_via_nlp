@@ -129,6 +129,20 @@ const fetchBookedSlots = async () => {
   return bookedSlots;
 };
 
+const fetchPastAppointments = async (doctorId) => {
+  const pastAppointments = [];
+  const pastAppointmentsQuery = query(
+    collection(db, "Past Appointments"),
+    where("doctorId", "==", doctorId)
+  );
+  const pastAppointmentsQueryQuerySnap = await getDocs(pastAppointmentsQuery);
+  pastAppointmentsQueryQuerySnap.forEach((doc) => {
+    let data = doc.data();
+    pastAppointments.push({ ...data });
+  });
+  return pastAppointments;
+};
+
 const cancelBookedSlot = async (slotId, userData) => {
   let slotRef = doc(db, "Booked Time Slots", slotId);
   let slotSnap = await getDoc(slotRef);
@@ -146,6 +160,8 @@ export default function AppointmentView() {
   const [userData, setUserData] = useState({});
   const [openSlotData, setOpenSlotData] = useState([]);
   const [bookedSlotData, setBookedSlotData] = useState([]);
+  const [pastAppointmentData, setPastAppointmentData] = useState([]);
+
   useEffect(() => {
     async function fetchUser() {
       let data = await fetchUserData();
@@ -168,14 +184,29 @@ export default function AppointmentView() {
   }, []);
 
   useEffect(() => {
+    async function fetchPastAppointmentData() {
+      let data = await fetchPastAppointments(auth.currentUser.uid);
+      for (let i = 0; i < data.length; i++) {
+        let patientData = await fetchPatientInfo(data[i].userId);
+        data[i]["patientName"] = patientData.firstName + " " + patientData.lastName
+        data[i]["patientPhone"] = patientData.pNum
+      }
+      setPastAppointmentData(data);
+    }
+    fetchPastAppointmentData();
+  }, []);
+
+  useEffect(() => {
     async function fetchOpenSlotsData() {
       let data = await fetchOpenSlots();
       setOpenSlotData(data);
     }
     fetchOpenSlotsData();
   }, []);
-  const hasBookedSlots = bookedSlotData.length != 0;
-  const hasOpenSlots = openSlotData.length != 0;
+
+  const hasBookedSlots = bookedSlotData.length !== 0;
+  const hasPastAppointments = pastAppointmentData.length !== 0;
+  const hasOpenSlots = openSlotData.length !== 0;
 
   return (
     <div className="appointment-view-container">
@@ -256,7 +287,7 @@ export default function AppointmentView() {
       </h2>
       <Separator className="my-4" />
       <div className="ml-64 px-2 upcoming-appointment-view-container grid grid-cols-6 gap-1 justify-evenly flex justify-center items-center">
-        {!hasOpenSlots && <h3>No open slots currently</h3>}
+        {!hasOpenSlots && <h3 className="flex justify-center items-center">No open slots currently</h3>}
         {openSlotData.map((slot) => (
           <div className="pending-appointment-card-container">
             <Card className="w-[250px]">
@@ -288,6 +319,69 @@ export default function AppointmentView() {
                   }}
                 >
                   Delete Slot
+                </Button>
+              </CardFooter>
+            </Card>
+            <br />
+          </div>
+        ))}
+      </div>
+      <h2
+        className="text-3xl font-medium leading-none flex justify-center items-center"
+        style={{
+          paddingTop: "20px",
+          marginBottom: "10px",
+          padding: "10px",
+        }}
+      >
+        Past Appointments
+      </h2>
+      <Separator className="my-4" />
+      {!hasPastAppointments && (
+        <h3 className="flex justify-center items-center">
+          No past appointments to view
+        </h3>
+      )}
+      <div className="ml-64 px-2 pending-appointment-view-container grid grid-cols-5 gap-1 justify-evenly flex justify-center items-center">
+        {pastAppointmentData.map((slot) => (
+          <div className="pending-appointment-card-container">
+            <Card className="w-[250px]">
+              <CardHeader>
+                <CardTitle>Past Appointment</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid w-full items-center gap-4">
+                  <div className="flex flex-col space-y-1.5">
+                    <Label>Patient Name:</Label>
+                    <p>{slot.patientName}</p>
+                  </div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label>Patient Phone:</Label>
+                    <p>{slot.patientPhone}</p>
+                  </div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label>Slot Date:</Label>
+                    <p>{formatDate(slot.slotDate)}</p>
+                  </div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label>Start Time:</Label>
+                    <p>{formatTime(slot.startTime)}</p>
+                  </div>
+                  <div className="flex flex-col space-y-1.5">
+                    <Label>End Time:</Label>
+                    <p>{formatTime(slot.endTime)}</p>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between justify-center">
+                <Button
+                  onClick={async () => {
+                    cancelBookedSlot(slot.id, userData);
+                    let updatedData = await fetchBookedSlots();
+                    setBookedSlotData(updatedData);
+                  }}
+                >
+                  Cancel Appointment
                 </Button>
               </CardFooter>
             </Card>

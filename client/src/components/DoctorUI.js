@@ -53,8 +53,8 @@ export default function DoctorUI() {
           </div> :
           <div className='h-screen relative'>
             {/* <div className="absolute div-sidebar"> */}
-              <DoctorSidebar 
-              userEmail={userData.email} 
+            <DoctorSidebar
+              userEmail={userData.email}
               pfp={auth.currentUser.photoURL}
               logOut={() => {
                 signOut(auth).then(() => {
@@ -66,15 +66,13 @@ export default function DoctorUI() {
                   });
                 });
               }} />
-            {/* </div> */}
-            {/* <div className="absolute float-right div-doctor"> */}
-              <Routes>
-                <Route path='/' element={<AppointmentView />} />
-                <Route path='/view-unverified-chatbot' element={<ChatVerificationView />} />
-                <Route path='/create-time-slot' element={<CreateTimeSlot doctorId={userData.uid} />} />
-                <Route path='/settings' element={<Settings userId={userData.uid} isDoctor={true} />} />
-              </Routes>
-            {/* </div> */}
+
+            <Routes>
+              <Route path='/' element={<AppointmentView />} />
+              <Route path='/view-unverified-chatbot' element={<ChatVerificationView />} />
+              <Route path='/create-time-slot' element={<CreateTimeSlot doctorId={userData.uid} />} />
+              <Route path='/settings' element={<Settings userId={userData.uid} isDoctor={true} />} />
+            </Routes>
           </div>
       }
 
