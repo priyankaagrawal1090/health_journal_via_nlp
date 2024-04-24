@@ -373,17 +373,6 @@ export default function AppointmentView() {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between justify-center">
-                <Button
-                  onClick={async () => {
-                    cancelBookedSlot(slot.id, userData);
-                    let updatedData = await fetchBookedSlots();
-                    setBookedSlotData(updatedData);
-                  }}
-                >
-                  Cancel Appointment
-                </Button>
-              </CardFooter>
             </Card>
             <br />
           </div>

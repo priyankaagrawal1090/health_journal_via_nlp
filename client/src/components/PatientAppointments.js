@@ -298,8 +298,6 @@ export default function PatientAppointments() {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="flex justify-between justify-center">
-                </CardFooter>
               </Card>
               <br />
             </div>
